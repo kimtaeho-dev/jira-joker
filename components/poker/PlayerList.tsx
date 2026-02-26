@@ -26,11 +26,7 @@ export function PlayerList() {
                   : 'border-gray-200 bg-gray-50 text-gray-400',
             ].join(' ')}
           >
-            {isRevealed && participant.vote
-              ? participant.vote
-              : participant.hasVoted
-                ? '✓'
-                : '…'}
+            {isRevealed && participant.vote ? participant.vote : participant.hasVoted ? '✓' : '…'}
           </div>
         </div>
       ))}

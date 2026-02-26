@@ -1,11 +1,12 @@
 'use client'
 
 import { use } from 'react'
-import { usePokerStore } from '@/store/usePokerStore'
+
 import { CardDeck } from '@/components/poker/CardDeck'
+import { JoinRoomForm } from '@/components/poker/JoinRoomForm'
 import { PlayerList } from '@/components/poker/PlayerList'
 import { VoteResults } from '@/components/poker/VoteResults'
-import { JoinRoomForm } from '@/components/poker/JoinRoomForm'
+import { usePokerStore } from '@/store/usePokerStore'
 
 export default function RoomPage({ params }: { params: Promise<{ roomId: string }> }) {
   const { roomId } = use(params)
@@ -36,7 +37,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
       <main className="mx-auto max-w-4xl space-y-8 px-6 py-10">
         {currentTicket && (
           <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-            <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+            <p className="text-xs font-medium tracking-wide text-gray-500 uppercase">
               Current Ticket
             </p>
             <h2 className="mt-1 text-lg font-semibold text-gray-900">{currentTicket}</h2>
@@ -44,14 +45,14 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
         )}
 
         <section>
-          <h3 className="mb-4 text-xs font-medium uppercase tracking-wide text-gray-500">
+          <h3 className="mb-4 text-xs font-medium tracking-wide text-gray-500 uppercase">
             Participants
           </h3>
           <PlayerList />
         </section>
 
         <section>
-          <h3 className="mb-4 text-xs font-medium uppercase tracking-wide text-gray-500">
+          <h3 className="mb-4 text-xs font-medium tracking-wide text-gray-500 uppercase">
             Your Vote
           </h3>
           <CardDeck />

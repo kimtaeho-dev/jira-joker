@@ -28,11 +28,13 @@ npm test         # Run tests (if configured)
 ## Architecture
 
 ### API Proxy Layer (`/api/jira`)
+
 - Handles Jira API Token securely server-side (never exposed to client)
 - `GET /api/jira` — fetches issue list for a given project
 - `PUT /api/jira` — updates the `Story Points` field on a Jira issue
 
 ### WebRTC Layer
+
 - Room creation generates a UUID used as the invitation link identifier
 - Participants form a **mesh network** (each peer connects to all others)
 - Signaling is required to exchange SDP offers/answers before P2P is established
@@ -40,11 +42,13 @@ npm test         # Run tests (if configured)
 - After all participants vote: 2-second countdown, then actual values sync over DataChannels
 
 ### State Management (Zustand)
+
 - All voting state lives client-side
 - Tracks: current ticket, participant list, vote status per peer, revealed values
 - Results computed from synced values: Mode (most common) and Average
 
 ### Card Deck
+
 Fibonacci sequence: `1, 2, 3, 5, 8, 13, 21` plus `?` (unknown) and `☕` (coffee break)
 
 ## Implementation Roadmap

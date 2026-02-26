@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+
 import { usePokerStore } from '@/store/usePokerStore'
 
 interface JoinRoomFormProps {
@@ -12,9 +13,8 @@ export function JoinRoomForm({ roomId }: JoinRoomFormProps) {
   const [copied, setCopied] = useState(false)
   const joinRoom = usePokerStore((s) => s.joinRoom)
 
-  const roomUrl = typeof window !== 'undefined'
-    ? `${window.location.origin}/room/${roomId}`
-    : `/room/${roomId}`
+  const roomUrl =
+    typeof window !== 'undefined' ? `${window.location.origin}/room/${roomId}` : `/room/${roomId}`
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(roomUrl)
@@ -36,7 +36,7 @@ export function JoinRoomForm({ roomId }: JoinRoomFormProps) {
         </div>
 
         <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-          <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Room Link</p>
+          <p className="text-xs font-medium tracking-wide text-gray-500 uppercase">Room Link</p>
           <div className="mt-2 flex items-center gap-2">
             <span className="flex-1 truncate rounded-lg bg-gray-50 px-3 py-2 text-sm text-gray-700">
               {roomUrl}
@@ -58,7 +58,7 @@ export function JoinRoomForm({ roomId }: JoinRoomFormProps) {
             onKeyDown={(e) => e.key === 'Enter' && handleJoin()}
             placeholder="Your name"
             autoFocus
-            className="w-full rounded-xl border border-gray-300 px-4 py-3 text-base text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full rounded-xl border border-gray-300 px-4 py-3 text-base text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
           />
           <button
             onClick={handleJoin}

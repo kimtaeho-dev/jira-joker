@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { usePokerStore, JiraConfig, JiraTicket } from '@/store/usePokerStore'
+import { useState } from 'react'
+
+import { JiraConfig, JiraTicket,usePokerStore } from '@/store/usePokerStore'
 
 interface JiraEpic {
   id: string
@@ -15,7 +16,7 @@ type Step = 1 | 2 | 3
 async function fetchFromJira<T>(
   type: string,
   config: JiraConfig,
-  extra?: Record<string, string>
+  extra?: Record<string, string>,
 ): Promise<T> {
   const params = new URLSearchParams({ type, ...extra })
   const reqHeaders: Record<string, string> = {
@@ -100,7 +101,9 @@ export function CreateRoomWizard() {
     setSearchingEpic(true)
     try {
       const epicData = await fetchFromJira<{ epic: JiraEpic }>('epic', jiraConfig, { epicKey: key })
-      const issueData = await fetchFromJira<{ issues: JiraTicket[] }>('issues', jiraConfig, { epicKey: key })
+      const issueData = await fetchFromJira<{ issues: JiraTicket[] }>('issues', jiraConfig, {
+        epicKey: key,
+      })
       setFoundEpic(epicData.epic)
       setTickets(issueData.issues)
     } catch (err) {
@@ -161,7 +164,9 @@ export function CreateRoomWizard() {
             <div className="space-y-4">
               <div>
                 <h2 className="text-lg font-semibold text-gray-900">Jira 연동</h2>
-                <p className="mt-1 text-sm text-gray-500">인증 방식을 선택하고 정보를 입력해주세요.</p>
+                <p className="mt-1 text-sm text-gray-500">
+                  인증 방식을 선택하고 정보를 입력해주세요.
+                </p>
               </div>
 
               {/* Cloud / Server toggle */}
@@ -199,19 +204,25 @@ export function CreateRoomWizard() {
                     type="text"
                     value={domain}
                     onChange={(e) => setDomain(e.target.value)}
-                    placeholder={authMode === 'cloud' ? 'your-org.atlassian.net' : 'https://jira.your-company.com'}
-                    className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder={
+                      authMode === 'cloud'
+                        ? 'your-org.atlassian.net'
+                        : 'https://jira.your-company.com'
+                    }
+                    className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
                 </div>
                 {authMode === 'cloud' && (
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-700">Jira Account Email</label>
+                    <label className="mb-1 block text-xs font-medium text-gray-700">
+                      Jira Account Email
+                    </label>
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="you@example.com"
-                      className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     />
                   </div>
                 )}
@@ -225,7 +236,7 @@ export function CreateRoomWizard() {
                     onChange={(e) => setToken(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleStep1Next()}
                     placeholder="토큰을 입력하세요"
-                    className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
                 </div>
               </div>
@@ -256,7 +267,7 @@ export function CreateRoomWizard() {
                 onKeyDown={(e) => e.key === 'Enter' && handleStep2Next()}
                 placeholder="홍길동"
                 autoFocus
-                className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
               />
               {error && <p className="text-sm text-red-600">{error}</p>}
               <div className="flex gap-2">
@@ -295,7 +306,7 @@ export function CreateRoomWizard() {
                   onKeyDown={(e) => e.key === 'Enter' && handleSearchEpic()}
                   placeholder="PROJ-42"
                   autoFocus
-                  className="flex-1 rounded-xl border border-gray-300 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 rounded-xl border border-gray-300 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 />
                 <button
                   onClick={handleSearchEpic}

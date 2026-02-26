@@ -37,7 +37,10 @@ export async function GET(req: NextRequest) {
       const res = await fetch(url, { headers })
       if (!res.ok) {
         const body = await res.text()
-        return NextResponse.json({ error: `인증 실패: ${res.status} ${body}` }, { status: res.status })
+        return NextResponse.json(
+          { error: `인증 실패: ${res.status} ${body}` },
+          { status: res.status },
+        )
       }
       const data = await res.json()
       return NextResponse.json({ displayName: data.displayName })
@@ -54,16 +57,18 @@ export async function GET(req: NextRequest) {
       }
       if (!res.ok) {
         const body = await res.text()
-        return NextResponse.json({ error: `Jira error: ${res.status} ${body}` }, { status: res.status })
+        return NextResponse.json(
+          { error: `Jira error: ${res.status} ${body}` },
+          { status: res.status },
+        )
       }
       const data = await res.json()
-
-      console.log('epic data', data);
-      
-      if (data.fields?.issuetype?.name !== '에픽') {
+      if (data.fields?.issuetype?.name !== 'Epic') {
         return NextResponse.json(
-          { error: `${epicKey}는 에픽 타입이 아닙니다 (${data.fields?.issuetype?.name ?? 'Unknown'})` },
-          { status: 400 }
+          {
+            error: `${epicKey}는 Epic 타입이 아닙니다 (${data.fields?.issuetype?.name ?? 'Unknown'})`,
+          },
+          { status: 400 },
         )
       }
       return NextResponse.json({
@@ -75,24 +80,31 @@ export async function GET(req: NextRequest) {
       if (!epicKey) {
         return NextResponse.json({ error: 'epicKey is required' }, { status: 400 })
       }
-      const jqlBase = email
-        ? `parent = ${epicKey}`
-        : `"Epic Link" = ${epicKey} AND issuetype in (Story, Task, Bug)`
-      const jql = encodeURIComponent(`${jqlBase} ORDER BY created DESC`)
-      const searchPath = email ? 'search/jql' : 'search'
-      const url = `${apiBase}/${searchPath}?jql=${jql}&fields=summary,key,customfield_10016&maxResults=100`
+      const jql = encodeURIComponent(
+        `"Epic Link" = ${epicKey} AND issuetype in (Story, Task, Bug) ORDER BY created DESC`,
+      )
+      const url = `${apiBase}/search?jql=${jql}&fields=summary,key,customfield_10016&maxResults=100`
       const res = await fetch(url, { headers })
       if (!res.ok) {
         const body = await res.text()
-        return NextResponse.json({ error: `Jira error: ${res.status} ${body}` }, { status: res.status })
+        return NextResponse.json(
+          { error: `Jira error: ${res.status} ${body}` },
+          { status: res.status },
+        )
       }
       const data = await res.json()
-      const issues = (data.issues ?? []).map((issue: { id: string; key: string; fields: { summary: string; customfield_10016?: number } }) => ({
-        id: issue.id,
-        key: issue.key,
-        summary: issue.fields.summary,
-        storyPoints: issue.fields.customfield_10016 ?? undefined,
-      }))
+      const issues = (data.issues ?? []).map(
+        (issue: {
+          id: string
+          key: string
+          fields: { summary: string; customfield_10016?: number }
+        }) => ({
+          id: issue.id,
+          key: issue.key,
+          summary: issue.fields.summary,
+          storyPoints: issue.fields.customfield_10016 ?? undefined,
+        }),
+      )
       return NextResponse.json({ issues })
     }
 

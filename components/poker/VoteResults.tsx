@@ -18,12 +18,12 @@ export function VoteResults() {
       <h3 className="mb-4 text-center text-lg font-semibold text-gray-900">Results</h3>
       <div className="flex justify-center gap-10">
         <div className="flex flex-col items-center gap-1">
-          <span className="text-xs font-medium uppercase tracking-wide text-gray-500">Mode</span>
+          <span className="text-xs font-medium tracking-wide text-gray-500 uppercase">Mode</span>
           <span className="text-4xl font-bold text-gray-900">{modeValue ?? '—'}</span>
         </div>
         <div className="w-px self-stretch bg-gray-200" />
         <div className="flex flex-col items-center gap-1">
-          <span className="text-xs font-medium uppercase tracking-wide text-gray-500">Average</span>
+          <span className="text-xs font-medium tracking-wide text-gray-500 uppercase">Average</span>
           <span className="text-4xl font-bold text-gray-900">
             {avgValue !== null ? avgValue.toFixed(1) : '—'}
           </span>

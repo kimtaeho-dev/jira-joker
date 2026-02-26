@@ -10,7 +10,7 @@ export interface Participant {
 export interface JiraConfig {
   domain: string
   token: string
-  email?: string   // Cloud: required / Server·DC: omitted
+  email?: string // Cloud: required / Server·DC: omitted
 }
 
 export interface JiraTicket {
@@ -81,7 +81,7 @@ export const usePokerStore = create<PokerState>()((set, get) => ({
     set((state) => ({
       myVote: value,
       participants: state.participants.map((p) =>
-        p.id === state.myId ? { ...p, hasVoted: true } : p
+        p.id === state.myId ? { ...p, hasVoted: true } : p,
       ),
     })),
 
@@ -89,7 +89,7 @@ export const usePokerStore = create<PokerState>()((set, get) => ({
     set((state) => ({
       phase: 'revealed',
       participants: state.participants.map((p) =>
-        p.id === state.myId ? { ...p, vote: state.myVote ?? undefined } : p
+        p.id === state.myId ? { ...p, vote: state.myVote ?? undefined } : p,
       ),
     })),
 
@@ -100,7 +100,7 @@ export const usePokerStore = create<PokerState>()((set, get) => ({
       participants: state.participants.map((p) =>
         p.id === state.myId
           ? { id: p.id, name: p.name, hasVoted: false }
-          : { ...p, hasVoted: true }
+          : { ...p, hasVoted: true },
       ),
     })),
 
