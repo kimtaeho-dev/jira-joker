@@ -18,13 +18,14 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
   const myName = usePokerStore((s) => s.myName)
   const storeRoomId = usePokerStore((s) => s.roomId)
   const revealVotes = usePokerStore((s) => s.revealVotes)
-  const allVoted = usePokerStore((s) => s.allVoted)
+  const participants = usePokerStore((s) => s.participants)
   const phase = usePokerStore((s) => s.phase)
   const currentTicket = usePokerStore((s) => s.currentTicket)
   const currentTicketIndex = usePokerStore((s) => s.currentTicketIndex)
   const tickets = usePokerStore((s) => s.tickets)
 
-  const isAllVoted = phase === 'voting' && allVoted()
+  const isAllVoted =
+    phase === 'voting' && participants.length > 0 && participants.every((p) => p.hasVoted)
   const [countdown, setCountdown] = useState<number | null>(null)
 
   useEffect(() => {
