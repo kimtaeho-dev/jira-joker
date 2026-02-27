@@ -63,7 +63,7 @@ export async function GET(req: NextRequest) {
         )
       }
       const data = await res.json()
-      if (data.fields?.issuetype?.name !== 'Epic') {
+      if (data.fields?.issuetype?.name !== '에픽') {
         return NextResponse.json(
           {
             error: `${epicKey}는 Epic 타입이 아닙니다 (${data.fields?.issuetype?.name ?? 'Unknown'})`,
@@ -80,11 +80,16 @@ export async function GET(req: NextRequest) {
       if (!epicKey) {
         return NextResponse.json({ error: 'epicKey is required' }, { status: 400 })
       }
-      const jql = encodeURIComponent(
-        `"Epic Link" = ${epicKey} AND issuetype in (Story, Task, Bug) ORDER BY created DESC`,
-      )
-      const url = `${apiBase}/search?jql=${jql}&fields=summary,key,customfield_10016&maxResults=100`
-      const res = await fetch(url, { headers })
+      const url = `${apiBase}/search/jql`
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jql: `parent = ${epicKey} ORDER BY created DESC`,
+          fields: ['summary', 'key', 'customfield_10016'],
+          maxResults: 100,
+        }),
+      })
       if (!res.ok) {
         const body = await res.text()
         return NextResponse.json(
