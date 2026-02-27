@@ -1,5 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+// Extract plain text from Jira Cloud ADF (Atlassian Document Format)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function extractAdfText(node: any): string {
+  if (!node) return ''
+  if (node.type === 'text') return node.text ?? ''
+  if (Array.isArray(node.content)) {
+    return node.content.map(extractAdfText).join(node.type === 'paragraph' ? '\n' : '')
+  }
+  return ''
+}
+
 function getCredentials(req: NextRequest) {
   const domain = req.headers.get('x-jira-domain')
   const token = req.headers.get('x-jira-token')
@@ -86,7 +97,16 @@ export async function GET(req: NextRequest) {
         headers: { ...headers, 'Content-Type': 'application/json' },
         body: JSON.stringify({
           jql: `parent = ${epicKey} ORDER BY created DESC`,
-          fields: ['summary', 'key', 'customfield_10016'],
+          fields: [
+            'summary',
+            'key',
+            'customfield_10016',
+            'description',
+            'assignee',
+            'reporter',
+            'duedate',
+            'priority',
+          ],
           maxResults: 100,
         }),
       })
@@ -98,17 +118,44 @@ export async function GET(req: NextRequest) {
         )
       }
       const data = await res.json()
+      const isCloud = !!email
       const issues = (data.issues ?? []).map(
-        (issue: {
-          id: string
-          key: string
-          fields: { summary: string; customfield_10016?: number }
-        }) => ({
-          id: issue.id,
-          key: issue.key,
-          summary: issue.fields.summary,
-          storyPoints: issue.fields.customfield_10016 ?? undefined,
-        }),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (issue: { id: string; key: string; fields: Record<string, any> }) => {
+          const f = issue.fields
+          // Cloud v3: description is ADF object; Server v2: plain text/HTML
+          let description: string | null = null
+          if (f.description) {
+            if (isCloud && typeof f.description === 'object') {
+              description = extractAdfText(f.description)
+            } else {
+              description = String(f.description)
+            }
+          }
+          return {
+            id: issue.id,
+            key: issue.key,
+            summary: f.summary,
+            storyPoints: f.customfield_10016 ?? undefined,
+            description,
+            assignee: f.assignee
+              ? {
+                  displayName: f.assignee.displayName,
+                  avatarUrl: f.assignee.avatarUrls?.['24x24'] ?? undefined,
+                }
+              : null,
+            reporter: f.reporter
+              ? {
+                  displayName: f.reporter.displayName,
+                  avatarUrl: f.reporter.avatarUrls?.['24x24'] ?? undefined,
+                }
+              : null,
+            dueDate: f.duedate ?? null,
+            priority: f.priority
+              ? { name: f.priority.name, iconUrl: f.priority.iconUrl ?? undefined }
+              : null,
+          }
+        },
       )
       return NextResponse.json({ issues })
     }

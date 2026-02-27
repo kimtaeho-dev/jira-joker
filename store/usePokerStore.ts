@@ -19,6 +19,11 @@ export interface JiraTicket {
   key: string
   summary: string
   storyPoints?: number
+  description?: string | null
+  assignee?: { displayName: string; avatarUrl?: string } | null
+  reporter?: { displayName: string; avatarUrl?: string } | null
+  dueDate?: string | null
+  priority?: { name: string; iconUrl?: string } | null
 }
 
 export interface CompletedTicket {
