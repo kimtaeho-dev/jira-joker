@@ -38,12 +38,14 @@ export interface SyncState {
   currentTicketIndex: number
   phase: 'voting' | 'revealed'
   completedTickets: CompletedTicket[]
+  hostId: string
 }
 
 interface PokerState {
   roomId: string | null
   myId: string
   myName: string | null
+  hostId: string
   jiraConfig: JiraConfig | null
   tickets: JiraTicket[]
   phase: 'voting' | 'revealed'
@@ -66,6 +68,7 @@ interface PokerState {
   setParticipantVote: (id: string, vote: string) => void
   applySyncState: (state: SyncState) => void
   // Derived
+  isHost: () => boolean
   allVoted: () => boolean
   mode: () => string | null
   average: () => number | null
@@ -77,6 +80,7 @@ const initialState = {
   roomId: null as string | null,
   myId: '',
   myName: null as string | null,
+  hostId: '',
   jiraConfig: null as JiraConfig | null,
   tickets: [] as JiraTicket[],
   phase: 'voting' as const,
@@ -98,6 +102,7 @@ export const usePokerStore = create<PokerState>()(
           roomId,
           myId,
           myName: name,
+          hostId: myId,
           jiraConfig,
           tickets,
           phase: 'voting',
@@ -146,11 +151,11 @@ export const usePokerStore = create<PokerState>()(
         set((state) => ({
           phase: 'voting',
           myVote: null,
-          participants: state.participants.map((p) =>
-            p.id === state.myId
-              ? { id: p.id, name: p.name, hasVoted: false }
-              : { ...p, hasVoted: true },
-          ),
+          participants: state.participants.map((p) => ({
+            id: p.id,
+            name: p.name,
+            hasVoted: false,
+          })),
         })),
 
       nextTicket: () => {
@@ -225,8 +230,14 @@ export const usePokerStore = create<PokerState>()(
             currentTicketIndex: syncState.currentTicketIndex,
             phase: syncState.phase,
             completedTickets: syncState.completedTickets,
+            hostId: syncState.hostId,
           }
         }),
+
+      isHost: () => {
+        const { hostId, myId } = get()
+        return hostId === myId
+      },
 
       allVoted: () => {
         const { participants } = get()
@@ -276,6 +287,7 @@ export const usePokerStore = create<PokerState>()(
         roomId: state.roomId,
         myId: state.myId,
         myName: state.myName,
+        hostId: state.hostId,
         jiraConfig: state.jiraConfig,
         tickets: state.tickets,
         phase: state.phase,

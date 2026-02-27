@@ -5,6 +5,7 @@ import { usePokerStore } from '@/store/usePokerStore'
 export function PlayerList() {
   const participants = usePokerStore((s) => s.participants)
   const phase = usePokerStore((s) => s.phase)
+  const hostId = usePokerStore((s) => s.hostId)
 
   const isRevealed = phase === 'revealed'
 
@@ -12,8 +13,13 @@ export function PlayerList() {
     <div className="flex flex-wrap justify-center gap-6">
       {participants.map((participant) => (
         <div key={participant.id} className="flex flex-col items-center gap-2">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-200 text-lg font-bold text-gray-600">
+          <div className="relative flex h-12 w-12 items-center justify-center rounded-full bg-gray-200 text-lg font-bold text-gray-600">
             {participant.name[0].toUpperCase()}
+            {participant.id === hostId && (
+              <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-yellow-400 text-[10px]" title="Host">
+                ★
+              </span>
+            )}
           </div>
           <span className="text-sm font-medium text-gray-700">{participant.name}</span>
           <div

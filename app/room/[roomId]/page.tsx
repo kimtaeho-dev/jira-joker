@@ -1,5 +1,6 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { use, useCallback, useEffect, useRef, useState } from 'react'
 
 import { CardDeck } from '@/components/poker/CardDeck'
@@ -15,6 +16,7 @@ import { usePokerStore } from '@/store/usePokerStore'
 
 export default function RoomPage({ params }: { params: Promise<{ roomId: string }> }) {
   const { roomId } = use(params)
+  const router = useRouter()
   const hydrated = useHydration()
 
   const myName = usePokerStore((s) => s.myName)
@@ -35,9 +37,13 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
   const setParticipantVoted = usePokerStore((s) => s.setParticipantVoted)
   const setParticipantVote = usePokerStore((s) => s.setParticipantVote)
   const applySyncState = usePokerStore((s) => s.applySyncState)
+  const isHost = usePokerStore((s) => s.isHost)
+  const leaveRoom = usePokerStore((s) => s.leaveRoom)
 
   const myVoteRef = useRef(myVote)
   useEffect(() => { myVoteRef.current = myVote }, [myVote])
+
+  const hostId = usePokerStore((s) => s.hostId)
 
   const storeRef = useRef({
     participants,
@@ -45,6 +51,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
     currentTicketIndex,
     phase,
     completedTickets: usePokerStore.getState().completedTickets,
+    hostId,
   })
   useEffect(() => {
     storeRef.current = {
@@ -53,8 +60,9 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
       currentTicketIndex,
       phase,
       completedTickets: usePokerStore.getState().completedTickets,
+      hostId,
     }
-  }, [participants, tickets, currentTicketIndex, phase])
+  }, [participants, tickets, currentTicketIndex, phase, hostId])
 
   const isAllVoted =
     phase === 'voting' &&
@@ -91,6 +99,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
               currentTicketIndex: s.currentTicketIndex,
               phase: s.phase,
               completedTickets: s.completedTickets,
+              hostId: s.hostId,
             },
           })
           break
@@ -118,6 +127,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
   useEffect(() => { broadcastRef.current = broadcast }, [broadcast])
   useEffect(() => { sendToPeerRef.current = sendToPeer }, [sendToPeer])
 
+  // Effect 1: 카운트다운 타이머만 관리
   useEffect(() => {
     if (!isAllVoted) {
       setCountdown(null)
@@ -128,15 +138,22 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
       setCountdown((prev) => {
         if (prev === null || prev <= 1) {
           clearInterval(interval)
-          revealVotes()
-          broadcastRef.current({ type: 'reveal', from: myId, vote: myVoteRef.current ?? '?' })
-          return null
+          return 0
         }
         return prev - 1
       })
     }, 1000)
     return () => clearInterval(interval)
-  }, [isAllVoted, revealVotes, myId])
+  }, [isAllVoted])
+
+  // Effect 2: countdown===0 감지 → reveal 실행
+  useEffect(() => {
+    if (countdown === 0) {
+      revealVotes()
+      broadcastRef.current({ type: 'reveal', from: myId, vote: myVoteRef.current ?? '?' })
+      setCountdown(null)
+    }
+  }, [countdown, revealVotes, myId])
 
   const handleSelectCard = useCallback(
     (value: string) => {
@@ -155,6 +172,11 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
     nextTicket()
     broadcastRef.current({ type: 'next' })
   }, [nextTicket])
+
+  const handleLeaveRoom = useCallback(() => {
+    leaveRoom()
+    router.push('/')
+  }, [leaveRoom, router])
 
   // 클립보드 복사
   const [copied, setCopied] = useState(false)
@@ -212,12 +234,39 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="border-b border-gray-200 bg-white px-6 py-4 shadow-sm">
+      <header className="border-b border-gray-200 bg-white px-6 py-3 shadow-sm">
         <div className="mx-auto flex max-w-4xl items-center justify-between">
+          {/* Left: Title */}
           <span className="text-xl font-bold text-gray-900">Jira Joker</span>
-          <span className="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-600">
-            Room: {roomId}
-          </span>
+
+          {/* Center: Room ID + Copy */}
+          <div className="flex items-center gap-2">
+            <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-mono text-gray-500">
+              {roomId.slice(0, 8)}…
+            </span>
+            <button
+              onClick={handleCopyInvite}
+              className="rounded-lg border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50"
+            >
+              {copied ? '복사됨!' : '링크 복사'}
+            </button>
+          </div>
+
+          {/* Right: User profile + Leave */}
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-600">
+                {myName?.[0]?.toUpperCase() ?? '?'}
+              </div>
+              <span className="text-sm font-medium text-gray-700">{myName}</span>
+            </div>
+            <button
+              onClick={handleLeaveRoom}
+              className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-red-500 transition-colors hover:bg-red-50 hover:border-red-200"
+            >
+              나가기
+            </button>
+          </div>
         </div>
       </header>
 
@@ -251,7 +300,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
           </section>
         )}
 
-        {countdown !== null && (
+        {countdown !== null && countdown > 0 && (
           <div className="flex justify-center">
             <div className="rounded-xl bg-blue-50 px-8 py-3 text-center">
               <p className="text-sm font-medium text-blue-600">모든 참가자가 투표를 완료했습니다</p>
@@ -260,7 +309,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
           </div>
         )}
 
-        <VoteResults onReset={handleReset} onNext={handleNext} />
+        <VoteResults onReset={handleReset} onNext={handleNext} isHost={isHost()} />
 
         <TicketHistory />
       </main>
