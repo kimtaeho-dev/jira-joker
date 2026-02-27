@@ -32,6 +32,14 @@ export interface CompletedTicket {
   result: { mode: string; average: number }
 }
 
+export interface SyncState {
+  participants: Participant[]
+  tickets: JiraTicket[]
+  currentTicketIndex: number
+  phase: 'voting' | 'revealed'
+  completedTickets: CompletedTicket[]
+}
+
 interface PokerState {
   roomId: string | null
   myId: string
@@ -51,6 +59,12 @@ interface PokerState {
   revealVotes: () => void
   resetRound: () => void
   nextTicket: () => void
+  // Multi-peer actions
+  addParticipant: (p: Participant) => void
+  removeParticipant: (id: string) => void
+  setParticipantVoted: (id: string) => void
+  setParticipantVote: (id: string, vote: string) => void
+  applySyncState: (state: SyncState) => void
   // Derived
   allVoted: () => boolean
   mode: () => string | null
@@ -167,6 +181,52 @@ export const usePokerStore = create<PokerState>()(
           })),
         })
       },
+
+      addParticipant: (p) =>
+        set((state) => {
+          if (state.participants.some((x) => x.id === p.id)) return {}
+          return { participants: [...state.participants, p] }
+        }),
+
+      removeParticipant: (id) =>
+        set((state) => ({
+          participants: state.participants.filter((p) => p.id !== id),
+        })),
+
+      setParticipantVoted: (id) =>
+        set((state) => ({
+          participants: state.participants.map((p) =>
+            p.id === id ? { ...p, hasVoted: true } : p,
+          ),
+        })),
+
+      setParticipantVote: (id, vote) =>
+        set((state) => ({
+          participants: state.participants.map((p) =>
+            p.id === id ? { ...p, hasVoted: true, vote } : p,
+          ),
+        })),
+
+      applySyncState: (syncState) =>
+        set((state) => {
+          // 자신의 투표 상태는 유지하면서 나머지 상태를 동기화
+          const myId = state.myId
+          const myParticipant = state.participants.find((p) => p.id === myId)
+          const mergedParticipants = syncState.participants.map((p) =>
+            p.id === myId && myParticipant ? myParticipant : p,
+          )
+          // 자신이 목록에 없으면 추가
+          if (myParticipant && !mergedParticipants.some((p) => p.id === myId)) {
+            mergedParticipants.push(myParticipant)
+          }
+          return {
+            participants: mergedParticipants,
+            tickets: syncState.tickets,
+            currentTicketIndex: syncState.currentTicketIndex,
+            phase: syncState.phase,
+            completedTickets: syncState.completedTickets,
+          }
+        }),
 
       allVoted: () => {
         const { participants } = get()

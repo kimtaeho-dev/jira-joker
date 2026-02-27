@@ -2,7 +2,12 @@
 
 import { usePokerStore } from '@/store/usePokerStore'
 
-export function VoteResults() {
+interface VoteResultsProps {
+  onReset?: () => void
+  onNext?: () => void
+}
+
+export function VoteResults({ onReset, onNext }: VoteResultsProps = {}) {
   const phase = usePokerStore((s) => s.phase)
   const resetRound = usePokerStore((s) => s.resetRound)
   const nextTicket = usePokerStore((s) => s.nextTicket)
@@ -15,6 +20,9 @@ export function VoteResults() {
   const modeValue = mode()
   const avgValue = average()
   const lastTicket = isLastTicket()
+
+  const handleReset = onReset ?? resetRound
+  const handleNext = onNext ?? nextTicket
 
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
@@ -34,7 +42,7 @@ export function VoteResults() {
       </div>
       <div className="mt-6 flex gap-3">
         <button
-          onClick={resetRound}
+          onClick={handleReset}
           className="flex-1 rounded-lg bg-gray-200 px-4 py-2 text-sm font-medium text-gray-800 transition-colors hover:bg-gray-300"
         >
           Re-vote
@@ -45,7 +53,7 @@ export function VoteResults() {
           </span>
         ) : (
           <button
-            onClick={nextTicket}
+            onClick={handleNext}
             className="flex-1 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-700"
           >
             Next Ticket →

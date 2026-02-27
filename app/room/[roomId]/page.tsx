@@ -1,6 +1,6 @@
 'use client'
 
-import { use, useEffect, useState } from 'react'
+import { use, useCallback, useEffect, useRef, useState } from 'react'
 
 import { CardDeck } from '@/components/poker/CardDeck'
 import { JoinRoomForm } from '@/components/poker/JoinRoomForm'
@@ -8,6 +8,8 @@ import { PlayerList } from '@/components/poker/PlayerList'
 import { TicketDetail } from '@/components/poker/TicketDetail'
 import { TicketHistory } from '@/components/poker/TicketHistory'
 import { VoteResults } from '@/components/poker/VoteResults'
+import type { DataMessage } from '@/hooks/useWebRTC'
+import { useWebRTC } from '@/hooks/useWebRTC'
 import { useHydration } from '@/store/useHydration'
 import { usePokerStore } from '@/store/usePokerStore'
 
@@ -16,17 +18,105 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
   const hydrated = useHydration()
 
   const myName = usePokerStore((s) => s.myName)
+  const myId = usePokerStore((s) => s.myId)
+  const myVote = usePokerStore((s) => s.myVote)
   const storeRoomId = usePokerStore((s) => s.roomId)
   const revealVotes = usePokerStore((s) => s.revealVotes)
+  const selectCard = usePokerStore((s) => s.selectCard)
+  const resetRound = usePokerStore((s) => s.resetRound)
+  const nextTicket = usePokerStore((s) => s.nextTicket)
   const participants = usePokerStore((s) => s.participants)
   const phase = usePokerStore((s) => s.phase)
   const currentTicket = usePokerStore((s) => s.currentTicket)
   const currentTicketIndex = usePokerStore((s) => s.currentTicketIndex)
   const tickets = usePokerStore((s) => s.tickets)
+  const addParticipant = usePokerStore((s) => s.addParticipant)
+  const removeParticipant = usePokerStore((s) => s.removeParticipant)
+  const setParticipantVoted = usePokerStore((s) => s.setParticipantVoted)
+  const setParticipantVote = usePokerStore((s) => s.setParticipantVote)
+  const applySyncState = usePokerStore((s) => s.applySyncState)
+
+  const myVoteRef = useRef(myVote)
+  useEffect(() => { myVoteRef.current = myVote }, [myVote])
+
+  const storeRef = useRef({
+    participants,
+    tickets,
+    currentTicketIndex,
+    phase,
+    completedTickets: usePokerStore.getState().completedTickets,
+  })
+  useEffect(() => {
+    storeRef.current = {
+      participants,
+      tickets,
+      currentTicketIndex,
+      phase,
+      completedTickets: usePokerStore.getState().completedTickets,
+    }
+  }, [participants, tickets, currentTicketIndex, phase])
 
   const isAllVoted =
-    phase === 'voting' && participants.length > 0 && participants.every((p) => p.hasVoted)
+    phase === 'voting' &&
+    participants.length >= 2 &&
+    participants.every((p) => p.hasVoted)
   const [countdown, setCountdown] = useState<number | null>(null)
+
+  // broadcast ref: WebRTC 초기화 전에도 안전하게 참조할 수 있도록
+  const broadcastRef = useRef<(msg: DataMessage) => void>(() => {})
+  const sendToPeerRef = useRef<(peerId: string, msg: DataMessage) => void>(() => {})
+
+  const handleDataMessage = useCallback(
+    (msg: DataMessage) => {
+      switch (msg.type) {
+        case 'voted':
+          setParticipantVoted(msg.from)
+          break
+        case 'reveal':
+          setParticipantVote(msg.from, msg.vote)
+          break
+        case 'reset':
+          resetRound()
+          break
+        case 'next':
+          nextTicket()
+          break
+        case 'sync_request': {
+          const s = storeRef.current
+          sendToPeerRef.current(msg.from, {
+            type: 'sync_response',
+            state: {
+              participants: s.participants,
+              tickets: s.tickets,
+              currentTicketIndex: s.currentTicketIndex,
+              phase: s.phase,
+              completedTickets: s.completedTickets,
+            },
+          })
+          break
+        }
+        case 'sync_response':
+          applySyncState(msg.state)
+          break
+      }
+    },
+    [setParticipantVoted, setParticipantVote, resetRound, nextTicket, applySyncState],
+  )
+
+  const { broadcast, sendToPeer } = useWebRTC({
+    roomId,
+    myId,
+    myName: myName ?? '',
+    enabled: !!myName && storeRoomId === roomId,
+    onMessage: handleDataMessage,
+    onPeerConnected: (peerId, name) =>
+      addParticipant({ id: peerId, name, hasVoted: false }),
+    onPeerDisconnected: (peerId) => removeParticipant(peerId),
+  })
+
+  // broadcast/sendToPeer ref 업데이트
+  useEffect(() => { broadcastRef.current = broadcast }, [broadcast])
+  useEffect(() => { sendToPeerRef.current = sendToPeer }, [sendToPeer])
 
   useEffect(() => {
     if (!isAllVoted) {
@@ -39,13 +129,43 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
         if (prev === null || prev <= 1) {
           clearInterval(interval)
           revealVotes()
+          broadcastRef.current({ type: 'reveal', from: myId, vote: myVoteRef.current ?? '?' })
           return null
         }
         return prev - 1
       })
     }, 1000)
     return () => clearInterval(interval)
-  }, [isAllVoted, revealVotes])
+  }, [isAllVoted, revealVotes, myId])
+
+  const handleSelectCard = useCallback(
+    (value: string) => {
+      selectCard(value)
+      broadcastRef.current({ type: 'voted', from: myId })
+    },
+    [selectCard, myId],
+  )
+
+  const handleReset = useCallback(() => {
+    resetRound()
+    broadcastRef.current({ type: 'reset' })
+  }, [resetRound])
+
+  const handleNext = useCallback(() => {
+    nextTicket()
+    broadcastRef.current({ type: 'next' })
+  }, [nextTicket])
+
+  // 클립보드 복사
+  const [copied, setCopied] = useState(false)
+  const inviteUrl = typeof window !== 'undefined' ? window.location.href : ''
+
+  const handleCopyInvite = useCallback(() => {
+    navigator.clipboard.writeText(inviteUrl).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }, [inviteUrl])
 
   if (!hydrated) {
     return (
@@ -60,6 +180,35 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
   }
 
   const ticket = currentTicket()
+
+  // 2인 미만 대기 화면
+  if (participants.length < 2) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-gray-50 px-6">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900">게임 준비 중</h2>
+          <p className="mt-2 text-gray-500">다른 참가자를 기다리는 중입니다...</p>
+        </div>
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600" />
+        <div className="flex w-full max-w-sm flex-col items-center gap-3 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <p className="text-sm font-medium text-gray-700">초대 링크를 공유하세요</p>
+          <div className="flex w-full items-center gap-2">
+            <input
+              readOnly
+              value={inviteUrl}
+              className="min-w-0 flex-1 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-600 outline-none"
+            />
+            <button
+              onClick={handleCopyInvite}
+              className="shrink-0 rounded-lg bg-gray-900 px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-gray-700"
+            >
+              {copied ? '복사됨!' : '복사'}
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -98,7 +247,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
             <h3 className="mb-4 text-xs font-medium tracking-wide text-gray-500 uppercase">
               Your Vote
             </h3>
-            <CardDeck />
+            <CardDeck onSelectCard={handleSelectCard} />
           </section>
         )}
 
@@ -111,7 +260,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
           </div>
         )}
 
-        <VoteResults />
+        <VoteResults onReset={handleReset} onNext={handleNext} />
 
         <TicketHistory />
       </main>

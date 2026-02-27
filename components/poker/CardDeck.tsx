@@ -6,12 +6,24 @@ import { PokerCard } from './PokerCard'
 
 export const CARD_VALUES = ['1', '2', '3', '5', '8', '13', '21', '?', '☕']
 
-export function CardDeck() {
+interface CardDeckProps {
+  onSelectCard?: (value: string) => void
+}
+
+export function CardDeck({ onSelectCard }: CardDeckProps = {}) {
   const myVote = usePokerStore((s) => s.myVote)
   const phase = usePokerStore((s) => s.phase)
   const selectCard = usePokerStore((s) => s.selectCard)
 
   const isRevealed = phase === 'revealed'
+
+  const handleClick = (value: string) => {
+    if (onSelectCard) {
+      onSelectCard(value)
+    } else {
+      selectCard(value)
+    }
+  }
 
   return (
     <div className="flex flex-wrap justify-center gap-3">
@@ -23,7 +35,7 @@ export function CardDeck() {
           isRevealed={isRevealed}
           vote={myVote ?? undefined}
           disabled={isRevealed}
-          onClick={isRevealed ? undefined : () => selectCard(value)}
+          onClick={isRevealed ? undefined : () => handleClick(value)}
         />
       ))}
     </div>
