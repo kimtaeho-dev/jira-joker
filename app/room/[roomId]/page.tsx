@@ -7,12 +7,15 @@ import { JoinRoomForm } from '@/components/poker/JoinRoomForm'
 import { PlayerList } from '@/components/poker/PlayerList'
 import { TicketHistory } from '@/components/poker/TicketHistory'
 import { VoteResults } from '@/components/poker/VoteResults'
+import { useHydration } from '@/store/useHydration'
 import { usePokerStore } from '@/store/usePokerStore'
 
 export default function RoomPage({ params }: { params: Promise<{ roomId: string }> }) {
   const { roomId } = use(params)
+  const hydrated = useHydration()
 
   const myName = usePokerStore((s) => s.myName)
+  const storeRoomId = usePokerStore((s) => s.roomId)
   const revealVotes = usePokerStore((s) => s.revealVotes)
   const allVoted = usePokerStore((s) => s.allVoted)
   const phase = usePokerStore((s) => s.phase)
@@ -20,7 +23,15 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
   const currentTicketIndex = usePokerStore((s) => s.currentTicketIndex)
   const tickets = usePokerStore((s) => s.tickets)
 
-  if (!myName) {
+  if (!hydrated) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <div className="animate-pulse text-gray-400">Loading...</div>
+      </div>
+    )
+  }
+
+  if (!myName || storeRoomId !== roomId) {
     return <JoinRoomForm roomId={roomId} />
   }
 

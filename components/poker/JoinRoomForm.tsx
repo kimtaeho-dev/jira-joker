@@ -24,7 +24,7 @@ export function JoinRoomForm({ roomId }: JoinRoomFormProps) {
 
   const handleJoin = () => {
     if (!name.trim()) return
-    joinRoom(name.trim())
+    joinRoom(name.trim(), roomId)
   }
 
   return (

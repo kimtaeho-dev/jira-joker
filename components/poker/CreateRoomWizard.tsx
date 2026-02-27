@@ -124,8 +124,8 @@ export function CreateRoomWizard() {
   // Step 3 — 방 만들기
   const handleCreateRoom = () => {
     if (!foundEpic || tickets.length === 0) return
-    createRoom(name.trim(), jiraConfig, tickets)
-    router.push('/room/' + crypto.randomUUID())
+    const roomId = createRoom(name.trim(), jiraConfig, tickets)
+    router.push('/room/' + roomId)
   }
 
   return (
