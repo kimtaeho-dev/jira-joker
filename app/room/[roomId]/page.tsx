@@ -126,9 +126,16 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
         case 'room_closed':
           setDisconnectReason('host_left')
           break
+        case 'kick':
+          if (msg.targetId === usePokerStore.getState().myId) {
+            setDisconnectReason('kicked')
+          } else {
+            removeParticipant(msg.targetId)
+          }
+          break
       }
     },
-    [setParticipantVoted, setParticipantVote, resetRound, nextTicket, applySyncState],
+    [setParticipantVoted, setParticipantVote, resetRound, nextTicket, applySyncState, removeParticipant],
   )
 
   const { broadcast, sendToPeer } = useWebRTC({
@@ -197,6 +204,11 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
     broadcastRef.current({ type: 'next' })
   }, [nextTicket])
 
+  const handleKick = useCallback((targetId: string) => {
+    broadcastRef.current({ type: 'kick', targetId })
+    removeParticipant(targetId)
+  }, [removeParticipant])
+
   const handleLeaveRoom = useCallback(() => {
     if (usePokerStore.getState().isHost()) {
       broadcastRef.current({ type: 'room_closed' })
@@ -251,13 +263,15 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
     return <JoinRoomForm roomId={roomId} />
   }
 
-  // disconnectReason overlay (호스트 이탈)
-  if (disconnectReason === 'host_left') {
+  // disconnectReason overlay (호스트 이탈 / 추방)
+  if (disconnectReason) {
+    const title = disconnectReason === 'host_left' ? '방이 종료되었습니다' : '방에서 추방되었습니다'
+    const desc = disconnectReason === 'host_left' ? '호스트가 방을 나갔습니다.' : '호스트에 의해 추방되었습니다.'
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
         <div className="mx-4 w-full max-w-sm rounded-2xl bg-white p-8 text-center shadow-xl">
-          <h2 className="text-xl font-bold text-gray-900">방이 종료되었습니다</h2>
-          <p className="mt-2 text-sm text-gray-500">호스트가 방을 나갔습니다.</p>
+          <h2 className="text-xl font-bold text-gray-900">{title}</h2>
+          <p className="mt-2 text-sm text-gray-500">{desc}</p>
           <button
             onClick={() => {
               leaveRoom()
@@ -359,7 +373,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
           <h3 className="mb-4 text-xs font-medium tracking-wide text-gray-500 uppercase">
             Participants
           </h3>
-          <PlayerList />
+          <PlayerList onKick={handleKick} isHost={isHost()} myId={myId} />
         </section>
 
         {ticket && (

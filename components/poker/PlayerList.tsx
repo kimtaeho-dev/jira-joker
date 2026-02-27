@@ -2,7 +2,13 @@
 
 import { usePokerStore } from '@/store/usePokerStore'
 
-export function PlayerList() {
+interface PlayerListProps {
+  onKick?: (participantId: string) => void
+  isHost?: boolean
+  myId?: string
+}
+
+export function PlayerList({ onKick, isHost, myId }: PlayerListProps) {
   const participants = usePokerStore((s) => s.participants)
   const phase = usePokerStore((s) => s.phase)
   const hostId = usePokerStore((s) => s.hostId)
@@ -34,6 +40,18 @@ export function PlayerList() {
           >
             {isRevealed && participant.vote ? participant.vote : participant.hasVoted ? '✓' : '…'}
           </div>
+          {isHost && onKick && participant.id !== myId && (
+            <button
+              onClick={() => onKick(participant.id)}
+              className="mt-1 flex h-6 w-6 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500"
+              title="추방"
+            >
+              <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <line x1="5" y1="5" x2="15" y2="15" />
+                <line x1="15" y1="5" x2="5" y2="15" />
+              </svg>
+            </button>
+          )}
         </div>
       ))}
     </div>
