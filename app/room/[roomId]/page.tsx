@@ -24,21 +24,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
   const currentTicketIndex = usePokerStore((s) => s.currentTicketIndex)
   const tickets = usePokerStore((s) => s.tickets)
 
-  if (!hydrated) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <div className="animate-pulse text-gray-400">Loading...</div>
-      </div>
-    )
-  }
-
-  if (!myName || storeRoomId !== roomId) {
-    return <JoinRoomForm roomId={roomId} />
-  }
-
   const isAllVoted = phase === 'voting' && allVoted()
-  const ticket = currentTicket()
-
   const [countdown, setCountdown] = useState<number | null>(null)
 
   useEffect(() => {
@@ -59,6 +45,20 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
     }, 1000)
     return () => clearInterval(interval)
   }, [isAllVoted, revealVotes])
+
+  if (!hydrated) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <div className="animate-pulse text-gray-400">Loading...</div>
+      </div>
+    )
+  }
+
+  if (!myName || storeRoomId !== roomId) {
+    return <JoinRoomForm roomId={roomId} />
+  }
+
+  const ticket = currentTicket()
 
   return (
     <div className="min-h-screen bg-gray-50">
