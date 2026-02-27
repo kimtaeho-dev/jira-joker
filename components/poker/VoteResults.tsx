@@ -5,6 +5,8 @@ import { usePokerStore } from '@/store/usePokerStore'
 export function VoteResults() {
   const phase = usePokerStore((s) => s.phase)
   const resetRound = usePokerStore((s) => s.resetRound)
+  const nextTicket = usePokerStore((s) => s.nextTicket)
+  const isLastTicket = usePokerStore((s) => s.isLastTicket)
   const mode = usePokerStore((s) => s.mode)
   const average = usePokerStore((s) => s.average)
 
@@ -12,6 +14,7 @@ export function VoteResults() {
 
   const modeValue = mode()
   const avgValue = average()
+  const lastTicket = isLastTicket()
 
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
@@ -29,12 +32,26 @@ export function VoteResults() {
           </span>
         </div>
       </div>
-      <button
-        onClick={resetRound}
-        className="mt-6 w-full rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-700"
-      >
-        Reset Round
-      </button>
+      <div className="mt-6 flex gap-3">
+        <button
+          onClick={resetRound}
+          className="flex-1 rounded-lg bg-gray-200 px-4 py-2 text-sm font-medium text-gray-800 transition-colors hover:bg-gray-300"
+        >
+          Re-vote
+        </button>
+        {lastTicket ? (
+          <span className="flex flex-1 items-center justify-center rounded-lg bg-green-50 px-4 py-2 text-sm font-medium text-green-700">
+            All Tickets Done
+          </span>
+        ) : (
+          <button
+            onClick={nextTicket}
+            className="flex-1 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-700"
+          >
+            Next Ticket →
+          </button>
+        )}
+      </div>
     </div>
   )
 }

@@ -20,6 +20,12 @@ export interface JiraTicket {
   storyPoints?: number
 }
 
+export interface CompletedTicket {
+  ticket: JiraTicket
+  votes: Record<string, string>
+  result: { mode: string; average: number }
+}
+
 interface PokerState {
   myId: string
   myName: string | null
@@ -28,18 +34,21 @@ interface PokerState {
   phase: 'voting' | 'revealed'
   myVote: string | null
   participants: Participant[]
-  currentTicket: string | null
+  currentTicketIndex: number
+  completedTickets: CompletedTicket[]
   // Actions
   createRoom: (name: string, jiraConfig: JiraConfig, tickets: JiraTicket[]) => void
   joinRoom: (name: string) => void
   selectCard: (value: string) => void
   revealVotes: () => void
   resetRound: () => void
-  setCurrentTicket: (title: string) => void
+  nextTicket: () => void
   // Derived
   allVoted: () => boolean
   mode: () => string | null
   average: () => number | null
+  currentTicket: () => JiraTicket | null
+  isLastTicket: () => boolean
 }
 
 export const usePokerStore = create<PokerState>()((set, get) => ({
@@ -50,7 +59,8 @@ export const usePokerStore = create<PokerState>()((set, get) => ({
   phase: 'voting',
   myVote: null,
   participants: [],
-  currentTicket: null,
+  currentTicketIndex: 0,
+  completedTickets: [],
 
   createRoom: (name, jiraConfig, tickets) => {
     const myId = crypto.randomUUID()
@@ -61,7 +71,8 @@ export const usePokerStore = create<PokerState>()((set, get) => ({
       tickets,
       phase: 'voting',
       myVote: null,
-      currentTicket: tickets[0] ? `${tickets[0].key}: ${tickets[0].summary}` : null,
+      currentTicketIndex: 0,
+      completedTickets: [],
       participants: [{ id: myId, name, hasVoted: false }],
     })
   },
@@ -104,7 +115,34 @@ export const usePokerStore = create<PokerState>()((set, get) => ({
       ),
     })),
 
-  setCurrentTicket: (title) => set({ currentTicket: title }),
+  nextTicket: () => {
+    const state = get()
+    const ticket = state.tickets[state.currentTicketIndex]
+    if (!ticket) return
+
+    const votes: Record<string, string> = {}
+    for (const p of state.participants) {
+      if (p.vote) votes[p.name] = p.vote
+    }
+
+    const modeValue = state.mode() ?? '?'
+    const avgValue = state.average() ?? 0
+
+    set({
+      currentTicketIndex: state.currentTicketIndex + 1,
+      completedTickets: [
+        ...state.completedTickets,
+        { ticket, votes, result: { mode: modeValue, average: avgValue } },
+      ],
+      phase: 'voting',
+      myVote: null,
+      participants: state.participants.map((p) => ({
+        id: p.id,
+        name: p.name,
+        hasVoted: false,
+      })),
+    })
+  },
 
   allVoted: () => {
     const { participants } = get()
@@ -135,5 +173,15 @@ export const usePokerStore = create<PokerState>()((set, get) => ({
       .map((p) => Number(p.vote!))
     if (numeric.length === 0) return null
     return numeric.reduce((a, b) => a + b, 0) / numeric.length
+  },
+
+  currentTicket: () => {
+    const { tickets, currentTicketIndex } = get()
+    return tickets[currentTicketIndex] ?? null
+  },
+
+  isLastTicket: () => {
+    const { tickets, currentTicketIndex } = get()
+    return currentTicketIndex >= tickets.length - 1
   },
 }))
