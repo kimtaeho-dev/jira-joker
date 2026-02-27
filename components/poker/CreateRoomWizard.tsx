@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { JiraConfig, JiraTicket,usePokerStore } from '@/store/usePokerStore'
 
@@ -30,6 +30,8 @@ async function fetchFromJira<T>(
   return data as T
 }
 
+const JIRA_CREDS_KEY = 'jira-joker-credentials'
+
 export function CreateRoomWizard() {
   const router = useRouter()
   const createRoom = usePokerStore((s) => s.createRoom)
@@ -41,6 +43,22 @@ export function CreateRoomWizard() {
   const [domain, setDomain] = useState('')
   const [email, setEmail] = useState('')
   const [token, setToken] = useState('')
+  const [hasSavedCreds, setHasSavedCreds] = useState(false)
+
+  // localStorage에서 저장된 인증 정보 로드
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(JIRA_CREDS_KEY)
+      if (saved) {
+        const creds = JSON.parse(saved)
+        if (creds.authMode) setAuthMode(creds.authMode)
+        if (creds.domain) setDomain(creds.domain)
+        if (creds.email) setEmail(creds.email)
+        if (creds.token) setToken(creds.token)
+        setHasSavedCreds(true)
+      }
+    } catch {}
+  }, [])
 
   // Step 2
   const [name, setName] = useState('')
@@ -73,6 +91,12 @@ export function CreateRoomWizard() {
     setLoading(true)
     try {
       await fetchFromJira<{ displayName: string }>('myself', jiraConfig)
+      try {
+        localStorage.setItem(JIRA_CREDS_KEY, JSON.stringify({
+          authMode, domain: domain.trim(), email: email.trim(), token: token.trim(),
+        }))
+        setHasSavedCreds(true)
+      } catch {}
       setStep(2)
     } catch (err) {
       setError(err instanceof Error ? err.message : '연결 실패')
@@ -248,6 +272,22 @@ export function CreateRoomWizard() {
               >
                 {loading ? '인증 확인 중...' : '다음'}
               </button>
+              {hasSavedCreds && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    localStorage.removeItem(JIRA_CREDS_KEY)
+                    setDomain('')
+                    setEmail('')
+                    setToken('')
+                    setAuthMode('cloud')
+                    setHasSavedCreds(false)
+                  }}
+                  className="w-full text-center text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  저장된 인증 정보 삭제
+                </button>
+              )}
             </div>
           )}
 
