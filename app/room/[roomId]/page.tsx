@@ -41,6 +41,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
   const leaveRoom = usePokerStore((s) => s.leaveRoom)
 
   const [roomValid, setRoomValid] = useState<boolean | null>(null)
+  const [disconnectReason, setDisconnectReason] = useState<'host_left' | 'kicked' | null>(null)
 
   const myVoteRef = useRef(myVote)
   useEffect(() => { myVoteRef.current = myVote }, [myVote])
@@ -122,6 +123,9 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
         case 'sync_response':
           applySyncState(msg.state)
           break
+        case 'room_closed':
+          setDisconnectReason('host_left')
+          break
       }
     },
     [setParticipantVoted, setParticipantVote, resetRound, nextTicket, applySyncState],
@@ -135,7 +139,12 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
     onMessage: handleDataMessage,
     onPeerConnected: (peerId, name) =>
       addParticipant({ id: peerId, name, hasVoted: false }),
-    onPeerDisconnected: (peerId) => removeParticipant(peerId),
+    onPeerDisconnected: (peerId) => {
+      removeParticipant(peerId)
+      if (peerId === usePokerStore.getState().hostId) {
+        setDisconnectReason('host_left')
+      }
+    },
   })
 
   // broadcast/sendToPeer ref 업데이트
@@ -189,6 +198,9 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
   }, [nextTicket])
 
   const handleLeaveRoom = useCallback(() => {
+    if (usePokerStore.getState().isHost()) {
+      broadcastRef.current({ type: 'room_closed' })
+    }
     leaveRoom()
     router.push('/')
   }, [leaveRoom, router])
@@ -237,6 +249,27 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
       )
     }
     return <JoinRoomForm roomId={roomId} />
+  }
+
+  // disconnectReason overlay (호스트 이탈)
+  if (disconnectReason === 'host_left') {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div className="mx-4 w-full max-w-sm rounded-2xl bg-white p-8 text-center shadow-xl">
+          <h2 className="text-xl font-bold text-gray-900">방이 종료되었습니다</h2>
+          <p className="mt-2 text-sm text-gray-500">호스트가 방을 나갔습니다.</p>
+          <button
+            onClick={() => {
+              leaveRoom()
+              router.push('/')
+            }}
+            className="mt-6 rounded-lg bg-gray-900 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-gray-700"
+          >
+            홈으로 돌아가기
+          </button>
+        </div>
+      </div>
+    )
   }
 
   const ticket = currentTicket()

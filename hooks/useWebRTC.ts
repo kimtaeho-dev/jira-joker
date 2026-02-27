@@ -11,6 +11,8 @@ export type DataMessage =
   | { type: 'next' }
   | { type: 'sync_request'; from: string }
   | { type: 'sync_response'; state: SyncState }
+  | { type: 'room_closed' }
+  | { type: 'kick'; targetId: string }
 
 interface UseWebRTCOptions {
   roomId: string
