@@ -68,6 +68,10 @@ export function broadcast(
   }
 }
 
+export function roomExists(roomId: string): boolean {
+  return rooms.has(roomId)
+}
+
 export function getExistingPeers(
   roomId: string,
 ): Array<{ id: string; name: string }> {

@@ -40,6 +40,8 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
   const isHost = usePokerStore((s) => s.isHost)
   const leaveRoom = usePokerStore((s) => s.leaveRoom)
 
+  const [roomValid, setRoomValid] = useState<boolean | null>(null)
+
   const myVoteRef = useRef(myVote)
   useEffect(() => { myVoteRef.current = myVote }, [myVote])
 
@@ -63,6 +65,19 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
       hostId,
     }
   }, [participants, tickets, currentTicketIndex, phase, hostId])
+
+  // Room 유효성 검사: 새 참가자 경로일 때만 서버에 확인
+  useEffect(() => {
+    if (!hydrated) return
+    if (myName && storeRoomId === roomId) {
+      setRoomValid(true)
+      return
+    }
+    fetch(`/api/room/${roomId}`)
+      .then((res) => res.json())
+      .then((data: { exists: boolean }) => setRoomValid(data.exists))
+      .catch(() => setRoomValid(false))
+  }, [hydrated, myName, storeRoomId, roomId])
 
   const isAllVoted =
     phase === 'voting' &&
@@ -198,6 +213,29 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
   }
 
   if (!myName || storeRoomId !== roomId) {
+    if (roomValid === null) {
+      return (
+        <div className="flex min-h-screen items-center justify-center bg-gray-50">
+          <div className="animate-pulse text-gray-400">Loading...</div>
+        </div>
+      )
+    }
+    if (roomValid === false) {
+      return (
+        <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-gray-50 px-6">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-gray-900">방을 찾을 수 없습니다</h2>
+            <p className="mt-2 text-gray-500">존재하지 않거나 이미 종료된 방입니다.</p>
+          </div>
+          <a
+            href="/"
+            className="rounded-lg bg-gray-900 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-gray-700"
+          >
+            홈으로 돌아가기
+          </a>
+        </div>
+      )
+    }
     return <JoinRoomForm roomId={roomId} />
   }
 
