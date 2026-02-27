@@ -1,6 +1,6 @@
 'use client'
 
-import { use } from 'react'
+import { use, useEffect, useState } from 'react'
 
 import { CardDeck } from '@/components/poker/CardDeck'
 import { JoinRoomForm } from '@/components/poker/JoinRoomForm'
@@ -36,8 +36,29 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
     return <JoinRoomForm roomId={roomId} />
   }
 
-  const canReveal = phase === 'voting' && allVoted()
+  const isAllVoted = phase === 'voting' && allVoted()
   const ticket = currentTicket()
+
+  const [countdown, setCountdown] = useState<number | null>(null)
+
+  useEffect(() => {
+    if (!isAllVoted) {
+      setCountdown(null)
+      return
+    }
+    setCountdown(2)
+    const interval = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev === null || prev <= 1) {
+          clearInterval(interval)
+          revealVotes()
+          return null
+        }
+        return prev - 1
+      })
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [isAllVoted, revealVotes])
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -80,14 +101,12 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
           </section>
         )}
 
-        {canReveal && (
+        {countdown !== null && (
           <div className="flex justify-center">
-            <button
-              onClick={revealVotes}
-              className="rounded-xl bg-blue-600 px-8 py-3 text-base font-semibold text-white shadow-sm transition-colors hover:bg-blue-700"
-            >
-              Reveal Votes
-            </button>
+            <div className="rounded-xl bg-blue-50 px-8 py-3 text-center">
+              <p className="text-sm font-medium text-blue-600">모든 참가자가 투표를 완료했습니다</p>
+              <p className="mt-1 text-2xl font-bold text-blue-700">{countdown}초 후 결과 공개</p>
+            </div>
           </div>
         )}
 
