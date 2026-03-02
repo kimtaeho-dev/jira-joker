@@ -55,6 +55,7 @@ export function CreateRoomWizard() {
         if (creds.domain) setDomain(creds.domain)
         if (creds.email) setEmail(creds.email)
         if (creds.token) setToken(creds.token)
+        if (creds.name) setName(creds.name)
         setHasSavedCreds(true)
       }
     } catch {}
@@ -105,13 +106,20 @@ export function CreateRoomWizard() {
     }
   }
 
-  // Step 2 → just advance
+  // Step 2 → just advance + 닉네임 localStorage 저장
   const handleStep2Next = () => {
     setError('')
     if (!name.trim()) {
       setError('닉네임을 입력해주세요.')
       return
     }
+    try {
+      const saved = localStorage.getItem(JIRA_CREDS_KEY)
+      if (saved) {
+        const creds = JSON.parse(saved)
+        localStorage.setItem(JIRA_CREDS_KEY, JSON.stringify({ ...creds, name: name.trim() }))
+      }
+    } catch {}
     setStep(3)
   }
 
