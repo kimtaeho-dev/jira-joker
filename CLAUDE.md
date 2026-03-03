@@ -29,7 +29,6 @@ npm run lint     # ESLint
 - **`/api/jira`** — Jira API Token을 서버 측에서 안전하게 처리
   - `GET /api/jira` — 프로젝트의 이슈 목록 조회
   - `PUT /api/jira` — Jira 이슈의 Story Points 필드 업데이트
-  - **보안:** SSRF 방지(프라이빗 IP 차단), JQL Injection 방지(epicKey 포맷 검증)
 - **`/api/room/[roomId]`** — Room 존재 여부 확인
   - `GET` → `{ exists: boolean }` (signalingStore의 rooms Map 기반)
 - **`/api/signaling/[roomId]`** — WebRTC 시그널링 (SSE + POST relay)
@@ -59,13 +58,6 @@ npm run lint     # ESLint
 ### Card Deck
 
 Fibonacci sequence: `1, 2, 3, 5, 8, 13, 21` plus `?` (unknown) and `☕` (coffee break)
-
-### Security
-
-- **보안 헤더:** CSP, X-Frame-Options(DENY), X-Content-Type-Options(nosniff), Referrer-Policy, Permissions-Policy (`next.config.ts`)
-- **SSRF 방지:** Jira 프록시에서 프라이빗 IP/내부 주소 차단 (`app/api/jira/route.ts`)
-- **JQL Injection 방지:** epicKey 정규식 검증 (`/^[A-Z][A-Z0-9_]+-\d+$/`)
-- **외부 의존성 최소화:** Google Fonts 제거(시스템 폰트), STUN 서버 환경변수화(`NEXT_PUBLIC_STUN_URL`)
 
 ## Implementation Status
 
