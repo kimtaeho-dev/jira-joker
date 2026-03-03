@@ -182,18 +182,14 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
     },
     onPeerDisconnected: (peerId) => {
       const state = usePokerStore.getState()
+      // 이미 제거된 피어는 무시 (peer_left + onconnectionstatechange 중복 호출 방어)
+      if (!state.participants.some((p) => p.id === peerId)) return
       const departedPeer = state.participants.find((p) => p.id === peerId)
       removeParticipant(peerId)
 
       if (peerId === state.hostId) {
-        // 호스트 이탈: 남은 참가자가 본인뿐이면 방 종료, 아니면 대기
-        const remaining = state.participants.filter((p) => p.id !== peerId && p.id !== state.myId)
-        if (remaining.length === 0) {
-          setDisconnectReason('host_left')
-        } else {
-          setDepartedHostName(departedPeer?.name ?? null)
-          setHostWaiting(true)
-        }
+        setDepartedHostName(departedPeer?.name ?? null)
+        setHostWaiting(true)
       }
     },
   })
