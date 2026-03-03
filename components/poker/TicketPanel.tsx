@@ -24,7 +24,7 @@ export function TicketPanel({ ticket, ticketIndex, totalTickets }: TicketPanelPr
       <button
         onClick={() => setIsOpen((v) => !v)}
         className={`fixed top-20 z-40 flex h-10 w-10 items-center justify-center rounded-l-lg border border-r-0 border-gray-200 bg-white shadow-sm transition-all ${
-          isOpen ? 'right-80' : 'right-0'
+          isOpen ? 'right-96' : 'right-0'
         }`}
         title={isOpen ? '패널 닫기' : '티켓 정보'}
       >
@@ -41,7 +41,7 @@ export function TicketPanel({ ticket, ticketIndex, totalTickets }: TicketPanelPr
 
       {/* Panel */}
       <div
-        className={`fixed right-0 top-[57px] bottom-0 z-30 w-80 border-l border-gray-200 bg-white/95 shadow-lg backdrop-blur transition-transform ${
+        className={`fixed right-0 top-[57px] bottom-0 z-30 w-96 border-l border-gray-200 bg-white/95 shadow-lg backdrop-blur transition-transform ${
           isOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >

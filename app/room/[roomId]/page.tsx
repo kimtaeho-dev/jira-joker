@@ -442,7 +442,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
       </header>
 
       {/* Main: Poker Table (center) */}
-      <main className="flex flex-1 items-center justify-center px-4 pb-24 lg:pr-80">
+      <main className="flex flex-1 items-center justify-center px-4 pb-24 lg:pr-96">
         <PokerTable
           myId={myId}
           countdown={countdown}
@@ -454,7 +454,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
 
       {/* Bottom: Card Deck (sticky) */}
       {ticket && (
-        <div className="sticky bottom-0 z-30 border-t border-gray-200 bg-white/95 px-4 py-3 backdrop-blur">
+        <div className="sticky bottom-0 z-30 border-t border-gray-200 bg-white/95 px-4 py-3 backdrop-blur lg:pr-96">
           <CardDeck onSelectCard={handleSelectCard} compact />
         </div>
       )}
