@@ -442,7 +442,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
       </header>
 
       {/* Main: Poker Table (center) */}
-      <main className="flex flex-1 items-center justify-center px-4 pb-24 lg:pr-96">
+      <main className="flex flex-1 items-center justify-center px-4 lg:pr-96">
         <PokerTable
           myId={myId}
           countdown={countdown}
