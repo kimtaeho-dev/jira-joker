@@ -55,6 +55,12 @@ npm run lint     # ESLint
 - Tracks: current ticket, participant list, vote status per peer, revealed values
 - Results computed from synced values: Mode (most common) and Average
 
+### UI Layout
+
+- **Poker Table (center):** Participants arranged on an ellipse around a green felt table surface. "Me" always at bottom center, others clockwise. Table center shows voting status / countdown / results with host controls.
+- **Ticket Panel (right float):** Fixed right-side panel (w-80) with toggle button. Contains simplified TicketDetail (key + progress + summary + description) and TicketHistory. Slides in/out.
+- **Card Deck (sticky bottom):** Fibonacci cards fixed at bottom of viewport. Only shown when a ticket is active.
+
 ### Card Deck
 
 Fibonacci sequence: `1, 2, 3, 5, 8, 13, 21` plus `?` (unknown) and `☕` (coffee break)
@@ -69,5 +75,7 @@ All core steps are complete:
 4. Reveal & sync logic (auto-reveal after full vote, results visualization)
 5. Room management (validation, host leave closure, kick)
 6. Host reconnection protection (beforeunload + indefinite wait + name-matching restore)
-7. Responsive layout (desktop 2-column + mobile compact)
+7. Poker table layout (circular table with participants around ellipse, green felt surface)
 8. Session summary screen (completed tickets table + total SP)
+9. Floating ticket panel (right-side slide panel with toggle, TicketDetail + TicketHistory)
+10. Sticky bottom card deck

@@ -5,11 +5,9 @@ import { use, useCallback, useEffect, useRef, useState } from 'react'
 
 import { CardDeck } from '@/components/poker/CardDeck'
 import { JoinRoomForm } from '@/components/poker/JoinRoomForm'
-import { PlayerList } from '@/components/poker/PlayerList'
+import { PokerTable } from '@/components/poker/PokerTable'
 import { SessionSummary } from '@/components/poker/SessionSummary'
-import { TicketDetail } from '@/components/poker/TicketDetail'
-import { TicketHistory } from '@/components/poker/TicketHistory'
-import { VoteResults } from '@/components/poker/VoteResults'
+import { TicketPanel } from '@/components/poker/TicketPanel'
 import type { DataMessage } from '@/hooks/useWebRTC'
 import { useWebRTC } from '@/hooks/useWebRTC'
 import { useHydration } from '@/store/useHydration'
@@ -376,8 +374,37 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
     )
   }
 
+  // 세션 완료 화면
+  if (!ticket && tickets.length > 0) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <header className="border-b border-gray-200 bg-white px-6 py-3 shadow-sm">
+          <div className="mx-auto flex max-w-6xl items-center justify-between">
+            <span className="text-xl font-bold text-gray-900">Jira Joker</span>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-600">
+                  {myName?.[0]?.toUpperCase() ?? '?'}
+                </div>
+                <span className="hidden text-sm font-medium text-gray-700 sm:inline">{myName}</span>
+              </div>
+            </div>
+          </div>
+        </header>
+        <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:py-10">
+          <SessionSummary
+            completedTickets={completedTickets}
+            totalTickets={tickets.length}
+            onLeave={handleLeaveRoom}
+          />
+        </main>
+      </div>
+    )
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="flex min-h-screen flex-col bg-gray-50">
+      {/* Header */}
       <header className="border-b border-gray-200 bg-white px-6 py-3 shadow-sm">
         <div className="mx-auto flex max-w-6xl items-center justify-between">
           {/* Left: Title */}
@@ -414,69 +441,30 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:py-10">
-        {!ticket && tickets.length > 0 ? (
-          <SessionSummary
-            completedTickets={completedTickets}
-            totalTickets={tickets.length}
-            onLeave={handleLeaveRoom}
-          />
-        ) : (
-          <div className="flex flex-col gap-6 lg:flex-row">
-            {/* Left Panel: Ticket Detail + History */}
-            <div className="flex-1 space-y-6">
-              {ticket && (
-                <TicketDetail
-                  ticket={ticket}
-                  ticketIndex={currentTicketIndex}
-                  totalTickets={tickets.length}
-                  collapsible
-                />
-              )}
-
-              {/* TicketHistory — desktop: left bottom */}
-              <div className="hidden lg:block">
-                <TicketHistory />
-              </div>
-            </div>
-
-            {/* Right Panel: Participants + CardDeck + Countdown + VoteResults */}
-            <div className="w-full space-y-6 lg:w-96 lg:shrink-0">
-              <section>
-                <h3 className="mb-3 text-xs font-medium tracking-wide text-gray-500 uppercase">
-                  Participants
-                </h3>
-                <PlayerList onKick={handleKick} isHost={isHost()} myId={myId} />
-              </section>
-
-              {ticket && (
-                <section>
-                  <h3 className="mb-3 text-xs font-medium tracking-wide text-gray-500 uppercase">
-                    Your Vote
-                  </h3>
-                  <CardDeck onSelectCard={handleSelectCard} compact />
-                </section>
-              )}
-
-              {countdown !== null && countdown > 0 && (
-                <div className="flex justify-center">
-                  <div className="rounded-xl bg-blue-50 px-8 py-3 text-center">
-                    <p className="text-sm font-medium text-blue-600">모든 참가자가 투표를 완료했습니다</p>
-                    <p className="mt-1 text-2xl font-bold text-blue-700">{countdown}초 후 결과 공개</p>
-                  </div>
-                </div>
-              )}
-
-              <VoteResults onReset={handleReset} onNext={handleNext} isHost={isHost()} />
-
-              {/* TicketHistory — mobile: bottom */}
-              <div className="lg:hidden">
-                <TicketHistory />
-              </div>
-            </div>
-          </div>
-        )}
+      {/* Main: Poker Table (center) */}
+      <main className="flex flex-1 items-center justify-center px-4 pb-24 lg:pr-80">
+        <PokerTable
+          myId={myId}
+          countdown={countdown}
+          onReset={handleReset}
+          onNext={handleNext}
+          onKick={handleKick}
+        />
       </main>
+
+      {/* Bottom: Card Deck (sticky) */}
+      {ticket && (
+        <div className="sticky bottom-0 z-30 border-t border-gray-200 bg-white/95 px-4 py-3 backdrop-blur">
+          <CardDeck onSelectCard={handleSelectCard} compact />
+        </div>
+      )}
+
+      {/* Floating: Ticket Panel (right) */}
+      <TicketPanel
+        ticket={ticket}
+        ticketIndex={currentTicketIndex}
+        totalTickets={tickets.length}
+      />
     </div>
   )
 }
