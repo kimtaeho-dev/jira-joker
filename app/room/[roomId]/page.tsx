@@ -136,6 +136,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
           applySyncState(msg.state)
           break
         case 'room_closed':
+          leaveRoom()
           setDisconnectReason('host_left')
           break
         case 'kick':
@@ -152,7 +153,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
           break
       }
     },
-    [setParticipantVoted, setParticipantVote, resetRound, nextTicket, applySyncState, removeParticipant, migrateHost],
+    [setParticipantVoted, setParticipantVote, resetRound, nextTicket, applySyncState, removeParticipant, migrateHost, leaveRoom],
   )
 
   const departedHostNameRef = useRef(departedHostName)
@@ -249,9 +250,12 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
   }, [removeParticipant])
 
   const handleLeaveRoom = useCallback(() => {
+    if (isHost()) {
+      broadcastRef.current({ type: 'room_closed' })
+    }
     leaveRoom()
     router.push('/')
-  }, [leaveRoom, router])
+  }, [leaveRoom, router, isHost])
 
   // 클립보드 복사
   const [copied, setCopied] = useState(false)
