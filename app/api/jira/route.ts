@@ -11,42 +11,6 @@ function extractAdfText(node: any): string {
   return ''
 }
 
-// SSRF 방지: 프라이빗 IP / 내부 주소 차단
-function isPrivateHost(hostname: string): boolean {
-  const lower = hostname.toLowerCase()
-  if (lower === 'localhost' || lower === '[::1]') return true
-
-  // IPv4 검사
-  const ipv4Match = lower.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/)
-  if (ipv4Match) {
-    const [, a, b] = ipv4Match.map(Number)
-    if (a === 127) return true                       // 127.0.0.0/8
-    if (a === 10) return true                        // 10.0.0.0/8
-    if (a === 172 && b >= 16 && b <= 31) return true // 172.16.0.0/12
-    if (a === 192 && b === 168) return true          // 192.168.0.0/16
-    if (a === 169 && b === 254) return true          // 169.254.0.0/16 (link-local / AWS metadata)
-    if (a === 0) return true                         // 0.0.0.0/8
-  }
-
-  return false
-}
-
-function validateDomain(domain: string): string | null {
-  try {
-    const urlStr = domain.startsWith('http') ? domain : `https://${domain}`
-    const url = new URL(urlStr)
-    if (isPrivateHost(url.hostname)) {
-      return 'Jira 도메인이 프라이빗 네트워크 주소입니다'
-    }
-    return null
-  } catch {
-    return '유효하지 않은 Jira 도메인입니다'
-  }
-}
-
-// JQL Injection 방지: Jira issue key 포맷 검증
-const JIRA_KEY_PATTERN = /^[A-Z][A-Z0-9_]+-\d+$/
-
 function getCredentials(req: NextRequest) {
   const domain = req.headers.get('x-jira-domain')
   const token = req.headers.get('x-jira-token')
@@ -61,21 +25,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Missing Jira credentials' }, { status: 400 })
   }
 
-  const domainError = validateDomain(domain)
-  if (domainError) {
-    return NextResponse.json({ error: domainError }, { status: 400 })
-  }
-
   const { searchParams } = new URL(req.url)
   const type = searchParams.get('type')
   const epicKey = searchParams.get('epicKey')
-
-  if (epicKey && !JIRA_KEY_PATTERN.test(epicKey)) {
-    return NextResponse.json(
-      { error: '유효하지 않은 Jira issue key 형식입니다' },
-      { status: 400 },
-    )
-  }
 
   const baseUrl = domain.startsWith('http') ? domain.replace(/\/$/, '') : `https://${domain}`
 

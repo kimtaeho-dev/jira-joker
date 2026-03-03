@@ -24,10 +24,8 @@ interface UseWebRTCOptions {
   onPeerDisconnected: (peerId: string) => void
 }
 
-const STUN_URL = process.env.NEXT_PUBLIC_STUN_URL || 'stun:stun.l.google.com:19302'
-
 const RTC_CONFIG: RTCConfiguration = {
-  iceServers: [{ urls: STUN_URL }],
+  iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
 }
 
 interface PeerConn {
