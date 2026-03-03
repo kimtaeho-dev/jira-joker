@@ -45,7 +45,8 @@ npm run lint     # ESLint
 ### Room Management
 
 - **Room 유효성 검사:** 새 참가자가 `/room/[roomId]`에 접근 시 `GET /api/room/[roomId]`로 방 존재 여부 확인 → 미존재 시 not-found UI 표시
-- **호스트 이탈 보호:** 호스트 이탈 시 즉시 종료하지 않고 "호스트 재접속 대기 중" 오버레이 표시. 호스트가 같은 이름으로 재접속하면 `host_migrated` broadcast로 hostId 자동 복원. beforeunload로 실수 탭 닫기 방지. 참가자 0명일 때만 방 종료
+- **호스트 능동 이탈:** 호스트가 "나가기" 클릭 시 `room_closed` broadcast → 참가자 전원 `leaveRoom()` 호출 + sessionStorage 정리
+- **호스트 이탈 보호:** 호스트 SSE 끊김(비자발적) 시 즉시 종료하지 않고 "호스트 재접속 대기 중" 오버레이 표시. 호스트가 같은 이름으로 재접속하면 `host_migrated` broadcast로 hostId 자동 복원. beforeunload로 실수 탭 닫기 방지. 참가자 0명일 때만 방 종료
 - **호스트 Kick:** 호스트가 `kick` 메시지 broadcast → 대상에게 추방 overlay, 나머지 참가자 목록에서 제거
 - **핵심 제약:** 서버(signalingStore)는 room→peers SSE 스트림만 관리하며 hostId 개념 없음. host 판별은 전적으로 클라이언트(Zustand) 기반
 
@@ -57,8 +58,8 @@ npm run lint     # ESLint
 
 ### UI Layout
 
-- **Poker Table (center):** Participants arranged on an ellipse around a green felt table surface. "Me" always at bottom center, others clockwise. Table center shows voting status / countdown / results with host controls.
-- **Ticket Panel (right float):** Fixed right-side panel (w-80) with toggle button. Contains simplified TicketDetail (key + progress + summary + description) and TicketHistory. Slides in/out.
+- **Poker Table (center):** Participants arranged on an ellipse around a blue table surface (`from-blue-600 to-blue-700`). "Me" always at bottom center, others clockwise. Table center shows voting status / countdown / results with host controls. Host marked with ★ badge.
+- **Ticket Panel (right float):** Fixed right-side panel (w-96) with toggle button. Contains simplified TicketDetail (key + progress + summary + description) and TicketHistory. Slides in/out. 패널 열림/닫힘 시 메인 콘텐츠에 `lg:pr-96` 적용하여 포커 테이블·카드덱 동적 중앙 정렬.
 - **Card Deck (sticky bottom):** Fibonacci cards fixed at bottom of viewport. Only shown when a ticket is active.
 
 ### Card Deck
@@ -75,7 +76,7 @@ All core steps are complete:
 4. Reveal & sync logic (auto-reveal after full vote, results visualization)
 5. Room management (validation, host leave closure, kick)
 6. Host reconnection protection (beforeunload + indefinite wait + name-matching restore)
-7. Poker table layout (circular table with participants around ellipse, green felt surface)
+7. Poker table layout (circular table with participants around ellipse, blue table surface)
 8. Session summary screen (completed tickets table + total SP)
 9. Floating ticket panel (right-side slide panel with toggle, TicketDetail + TicketHistory)
 10. Sticky bottom card deck

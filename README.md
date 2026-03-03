@@ -21,17 +21,21 @@ app/
   api/
     jira/route.ts                   # Jira REST proxy (GET: myself/epic/issues)
     signaling/[roomId]/route.ts     # SSE GET (signaling stream) + POST (relay)
-  room/[roomId]/page.tsx            # Poker room (WebRTC, game loop, header)
+    room/[roomId]/route.ts          # Room existence check (GET → { exists })
+  room/[roomId]/page.tsx            # Poker room (WebRTC, game loop, PokerTable + TicketPanel + CardDeck)
 
 components/poker/
   CreateRoomWizard.tsx              # 3-step wizard (Jira auth → nickname → epic)
   JoinRoomForm.tsx                  # Link-joiner entry (name input)
   CardDeck.tsx                      # Card row, CARD_VALUES export
   PokerCard.tsx                     # Single card (value, selected, revealed states)
-  PlayerList.tsx                    # Participant avatars + vote badges + host star
-  VoteResults.tsx                   # Mode/Average + Re-vote/Next (host-only)
-  TicketDetail.tsx                  # Current ticket info (desc, assignee, priority)
+  PokerTable.tsx                    # Circular poker table (elliptical seating + blue table + center results/controls)
+  TicketPanel.tsx                   # Right-side floating panel (w-96, toggle, TicketDetail + TicketHistory)
+  TicketDetail.tsx                  # Simplified ticket info (key, progress, summary, description)
   TicketHistory.tsx                 # Completed tickets accordion
+  SessionSummary.tsx                # Session end summary (completed tickets table + total SP)
+  PlayerList.tsx                    # (미사용, PokerTable로 대체)
+  VoteResults.tsx                   # (미사용, PokerTable 내부 TableCenter로 대체)
 
 hooks/
   useWebRTC.ts                      # SSE signaling + RTCPeerConnection mesh
@@ -121,6 +125,9 @@ interface SyncState {
 | `next` | — | 호스트가 Next Ticket 클릭 시 broadcast |
 | `sync_request` | `{ from }` | DataChannel open 시 새 피어가 전송 |
 | `sync_response` | `{ state: SyncState }` | sync_request 수신한 기존 피어가 응답 |
+| `room_closed` | — | 호스트 능동 이탈 시 전체 broadcast → 참가자 세션 정리 |
+| `kick` | `{ targetId }` | 호스트가 특정 참가자 추방 시 broadcast |
+| `host_migrated` | `{ newHostId }` | 호스트 재접속 시 hostId 복원 broadcast |
 
 ### Connection Flow
 
@@ -222,7 +229,16 @@ CreateRoomWizard (Step1: Jira 인증 → Step2: 닉네임 → Step3: Epic 선택
 
 ### 나가기
 
-- 헤더 "나가기" 버튼 → `leaveRoom()` → `router.push('/')` → SSE abort → `peer_left` broadcast
+- **호스트:** "나가기" 클릭 → `room_closed` broadcast → `leaveRoom()` → `router.push('/')`
+- **참가자:** `room_closed` 수신 시 `leaveRoom()` 호출 → sessionStorage 정리 → "호스트가 방을 종료했습니다" overlay 표시
+- **일반 참가자 이탈:** 헤더 "나가기" → `leaveRoom()` → `router.push('/')` → SSE abort → `peer_left` broadcast
+
+### Room Management
+
+- **호스트 이탈 보호:** 호스트 SSE 끊김 시 즉시 종료하지 않고 "호스트 재접속 대기 중" 오버레이 표시. 호스트가 같은 이름으로 재접속하면 `host_migrated` broadcast로 hostId 자동 복원
+- **beforeunload:** 호스트 탭 닫기 시 확인 대화상자 표시 (실수 방지)
+- **호스트 Kick:** 호스트가 `kick` 메시지 broadcast → 대상에게 추방 overlay 표시, 나머지 참가자 목록에서 제거
+- **참가자 0명 시 방 종료:** 모든 참가자 이탈 시에만 서버 측 room 정리
 
 ## UI 구조
 
@@ -232,10 +248,29 @@ CreateRoomWizard (Step1: Jira 인증 → Step2: 닉네임 → Step3: Epic 선택
 - 중앙: roomId 축약(8자) + "링크 복사" 버튼
 - 우측: 유저 아바타(이니셜) + 이름 + "나가기" 버튼
 
-### Host 표시
+### Poker Table (중앙)
 
-- PlayerList: 호스트 아바타에 ★ 뱃지
-- VoteResults: 비호스트에게 "호스트만 다음 단계를 진행할 수 있습니다" 안내 + 버튼 disabled
+- **테이블:** blue 그라데이션 (`from-blue-600 to-blue-700`) 타원형 테이블
+- **좌석 배치:** 참가자를 타원 위에 배치. "나(Me)"는 항상 하단 중앙, 나머지 시계 방향
+- **Host 표시:** 호스트 아바타에 ★ 노란색 뱃지 (`bg-yellow-400`)
+- **TableCenter:** 테이블 중앙에 투표 상태 / 카운트다운 / 결과(Mode·Avg) 표시
+  - 호스트 전용 컨트롤: "Re-vote" + "Next →" (마지막 티켓 시 "All Done")
+  - 비호스트: "호스트만 진행 가능" 안내
+
+### Ticket Panel (우측 float)
+
+- **너비:** `w-96` (384px), 우측 고정
+- **토글:** 항상 보이는 토글 버튼 (열림 시 chevron-right, 닫힘 시 document icon)
+- **슬라이드:** `translate-x` 기반 애니메이션 (열림: `translate-x-0`, 닫힘: `translate-x-full`)
+- **동적 중앙 정렬:** 패널 열림 시 메인 콘텐츠에 `lg:pr-96` 적용 → 테이블·카드덱 자동 재중앙화
+- **내용:** TicketDetail (key + progress + summary + description) + TicketHistory
+- **모바일:** `bg-black/20` backdrop overlay (lg 이상에서는 숨김)
+
+### Card Deck (sticky bottom)
+
+- Fibonacci 카드 하단 고정
+- 티켓 활성화 시에만 표시
+- 패널 열림 시 `lg:pr-96` 연동하여 중앙 정렬 유지
 
 ### Auto-Reveal 조건
 
