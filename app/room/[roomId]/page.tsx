@@ -38,6 +38,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
   const setParticipantVoted = usePokerStore((s) => s.setParticipantVoted)
   const setParticipantVote = usePokerStore((s) => s.setParticipantVote)
   const applySyncState = usePokerStore((s) => s.applySyncState)
+  const completedTickets = usePokerStore((s) => s.completedTickets)
   const isHost = usePokerStore((s) => s.isHost)
   const leaveRoom = usePokerStore((s) => s.leaveRoom)
   const migrateHost = usePokerStore((s) => s.migrateHost)
@@ -378,8 +379,6 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
       </div>
     )
   }
-
-  const completedTickets = usePokerStore((s) => s.completedTickets)
 
   return (
     <div className="min-h-screen bg-gray-50">
