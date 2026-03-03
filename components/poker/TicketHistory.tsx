@@ -55,7 +55,7 @@ export function TicketHistory() {
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="rounded bg-gray-200 px-1.5 py-0.5 text-xs font-mono font-semibold text-gray-600">
+                    <span className="shrink-0 rounded bg-gray-200 px-1.5 py-0.5 text-xs font-mono font-semibold text-gray-600">
                       {ct.ticket.key}
                     </span>
                     <span className="truncate text-sm text-gray-800">{ct.ticket.summary}</span>
