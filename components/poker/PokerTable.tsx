@@ -42,10 +42,10 @@ export function PokerTable({ myId, countdown, onReset, onNext, onKick }: PokerTa
 
   return (
     <div className="relative mx-auto aspect-square w-full max-w-[min(600px,85vh)]">
-      {/* Table surface — green felt ellipse */}
-      <div className="absolute left-1/2 top-1/2 h-[45%] w-[55%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-b from-emerald-600 to-emerald-700 shadow-xl ring-4 ring-emerald-800/30 ring-offset-2 ring-offset-emerald-900/10">
+      {/* Table surface */}
+      <div className="absolute left-1/2 top-1/2 h-[45%] w-[55%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-b from-blue-600 to-blue-700 shadow-xl ring-4 ring-blue-800/30 ring-offset-2 ring-offset-blue-900/10">
         {/* Inner border for depth */}
-        <div className="absolute inset-2 rounded-full border border-emerald-500/30" />
+        <div className="absolute inset-2 rounded-full border border-blue-500/30" />
 
         {/* Center content */}
         <div className="absolute inset-0 flex items-center justify-center">
@@ -177,7 +177,7 @@ function TableCenter({ phase, countdown, modeValue, avgValue, lastTicket, isHost
   if (countdown !== null && countdown > 0) {
     return (
       <div className="text-center">
-        <p className="text-xs font-medium text-emerald-100">결과 공개까지</p>
+        <p className="text-xs font-medium text-blue-100">결과 공개까지</p>
         <p className="mt-1 text-4xl font-black text-white">{countdown}</p>
       </div>
     )
@@ -189,12 +189,12 @@ function TableCenter({ phase, countdown, modeValue, avgValue, lastTicket, isHost
       <div className="flex flex-col items-center gap-2 px-4">
         <div className="flex items-center gap-4">
           <div className="text-center">
-            <p className="text-[10px] font-medium tracking-wide text-emerald-200 uppercase">Mode</p>
+            <p className="text-[10px] font-medium tracking-wide text-blue-200 uppercase">Mode</p>
             <p className="text-2xl font-black text-white sm:text-3xl">{modeValue ?? '—'}</p>
           </div>
-          <div className="h-8 w-px bg-emerald-400/40" />
+          <div className="h-8 w-px bg-blue-400/40" />
           <div className="text-center">
-            <p className="text-[10px] font-medium tracking-wide text-emerald-200 uppercase">Avg</p>
+            <p className="text-[10px] font-medium tracking-wide text-blue-200 uppercase">Avg</p>
             <p className="text-2xl font-black text-white sm:text-3xl">
               {avgValue !== null ? avgValue.toFixed(1) : '—'}
             </p>
@@ -210,20 +210,20 @@ function TableCenter({ phase, countdown, modeValue, avgValue, lastTicket, isHost
               Re-vote
             </button>
             {lastTicket ? (
-              <span className="rounded-full bg-green-400/30 px-3 py-1 text-[11px] font-semibold text-green-100">
+              <span className="rounded-full bg-blue-400/30 px-3 py-1 text-[11px] font-semibold text-blue-100">
                 All Done
               </span>
             ) : (
               <button
                 onClick={onNext}
-                className="rounded-full bg-white/90 px-3 py-1 text-[11px] font-semibold text-emerald-800 transition-colors hover:bg-white"
+                className="rounded-full bg-white/90 px-3 py-1 text-[11px] font-semibold text-blue-800 transition-colors hover:bg-white"
               >
                 Next →
               </button>
             )}
           </div>
         ) : (
-          <p className="mt-1 text-[10px] text-emerald-200">호스트만 진행 가능</p>
+          <p className="mt-1 text-[10px] text-blue-200">호스트만 진행 가능</p>
         )}
       </div>
     )
@@ -231,6 +231,6 @@ function TableCenter({ phase, countdown, modeValue, avgValue, lastTicket, isHost
 
   // Voting in progress
   return (
-    <p className="text-xs font-medium text-emerald-100/80">투표를 진행해주세요</p>
+    <p className="text-xs font-medium text-blue-100/80">투표를 진행해주세요</p>
   )
 }
