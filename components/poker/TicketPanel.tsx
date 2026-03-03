@@ -1,7 +1,5 @@
 'use client'
 
-import { useState } from 'react'
-
 import { JiraTicket } from '@/store/usePokerStore'
 
 import { TicketDetail } from './TicketDetail'
@@ -11,18 +9,18 @@ interface TicketPanelProps {
   ticket: JiraTicket | null
   ticketIndex: number
   totalTickets: number
+  isOpen: boolean
+  onToggle: () => void
 }
 
-export function TicketPanel({ ticket, ticketIndex, totalTickets }: TicketPanelProps) {
-  const [isOpen, setIsOpen] = useState(true)
-
+export function TicketPanel({ ticket, ticketIndex, totalTickets, isOpen, onToggle }: TicketPanelProps) {
   if (!ticket && totalTickets === 0) return null
 
   return (
     <>
       {/* Toggle button — always visible, attached to panel edge */}
       <button
-        onClick={() => setIsOpen((v) => !v)}
+        onClick={onToggle}
         className={`fixed top-20 z-40 flex h-10 w-10 items-center justify-center rounded-l-lg border border-r-0 border-gray-200 bg-white shadow-sm transition-all ${
           isOpen ? 'right-96' : 'right-0'
         }`}
@@ -68,7 +66,7 @@ export function TicketPanel({ ticket, ticketIndex, totalTickets }: TicketPanelPr
       {isOpen && (
         <div
           className="fixed inset-0 z-20 bg-black/20 lg:hidden"
-          onClick={() => setIsOpen(false)}
+          onClick={onToggle}
         />
       )}
     </>

@@ -45,6 +45,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
   const [disconnectReason, setDisconnectReason] = useState<'host_left' | 'kicked' | null>(null)
   const [hostWaiting, setHostWaiting] = useState(false)
   const [departedHostName, setDepartedHostName] = useState<string | null>(null)
+  const [panelOpen, setPanelOpen] = useState(true)
 
   const myVoteRef = useRef(myVote)
   useEffect(() => { myVoteRef.current = myVote }, [myVote])
@@ -442,7 +443,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
       </header>
 
       {/* Main: Poker Table (center) */}
-      <main className="flex flex-1 items-center justify-center px-4 lg:pr-96">
+      <main className={`flex flex-1 items-center justify-center px-4 transition-[padding] duration-300 ${panelOpen ? 'lg:pr-96' : ''}`}>
         <PokerTable
           myId={myId}
           countdown={countdown}
@@ -454,7 +455,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
 
       {/* Bottom: Card Deck (sticky) */}
       {ticket && (
-        <div className="sticky bottom-0 z-30 border-t border-gray-200 bg-white/95 px-4 py-3 backdrop-blur lg:pr-96">
+        <div className={`sticky bottom-0 z-30 border-t border-gray-200 bg-white/95 px-4 py-3 backdrop-blur transition-[padding] duration-300 ${panelOpen ? 'lg:pr-96' : ''}`}>
           <CardDeck onSelectCard={handleSelectCard} compact />
         </div>
       )}
@@ -464,6 +465,8 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
         ticket={ticket}
         ticketIndex={currentTicketIndex}
         totalTickets={tickets.length}
+        isOpen={panelOpen}
+        onToggle={() => setPanelOpen((v) => !v)}
       />
     </div>
   )
