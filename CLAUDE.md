@@ -40,12 +40,12 @@ npm run lint     # ESLint
 - Signaling is required to exchange SDP offers/answers before P2P is established
 - During voting: only **vote completion status** is broadcast (actual card value stays local)
 - After all participants vote: 2-second countdown, then actual values sync over DataChannels
-- **DataMessage types:** `voted`, `reveal`, `reset`, `next`, `sync_request`, `sync_response`, `room_closed`, `kick`
+- **DataMessage types:** `voted`, `reveal`, `reset`, `next`, `sync_request`, `sync_response`, `room_closed`, `kick`, `host_migrated`
 
 ### Room Management
 
 - **Room 유효성 검사:** 새 참가자가 `/room/[roomId]`에 접근 시 `GET /api/room/[roomId]`로 방 존재 여부 확인 → 미존재 시 not-found UI 표시
-- **호스트 이탈 시 방 종료:** 호스트 정상 이탈 시 `room_closed` broadcast, 비정상 이탈(탭 종료) 시 `onPeerDisconnected`에서 hostId 비교로 감지 → 참가자에게 종료 overlay
+- **호스트 이탈 보호:** 호스트 이탈 시 즉시 종료하지 않고 "호스트 재접속 대기 중" 오버레이 표시. 호스트가 같은 이름으로 재접속하면 `host_migrated` broadcast로 hostId 자동 복원. beforeunload로 실수 탭 닫기 방지. 참가자 0명일 때만 방 종료
 - **호스트 Kick:** 호스트가 `kick` 메시지 broadcast → 대상에게 추방 overlay, 나머지 참가자 목록에서 제거
 - **핵심 제약:** 서버(signalingStore)는 room→peers SSE 스트림만 관리하며 hostId 개념 없음. host 판별은 전적으로 클라이언트(Zustand) 기반
 
@@ -68,3 +68,6 @@ All core steps are complete:
 3. Poker UI and Zustand state (card components, vote tracking)
 4. Reveal & sync logic (auto-reveal after full vote, results visualization)
 5. Room management (validation, host leave closure, kick)
+6. Host reconnection protection (beforeunload + indefinite wait + name-matching restore)
+7. Responsive layout (desktop 2-column + mobile compact)
+8. Session summary screen (completed tickets table + total SP)
