@@ -16,10 +16,10 @@ export function PlayerList({ onKick, isHost, myId }: PlayerListProps) {
   const isRevealed = phase === 'revealed'
 
   return (
-    <div className="flex flex-wrap justify-center gap-6">
+    <div className="flex flex-wrap justify-center gap-4 lg:gap-5">
       {participants.map((participant) => (
         <div key={participant.id} className="flex flex-col items-center gap-2">
-          <div className="relative flex h-12 w-12 items-center justify-center rounded-full bg-gray-200 text-lg font-bold text-gray-600">
+          <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 text-base font-bold text-gray-600 lg:h-12 lg:w-12 lg:text-lg">
             {participant.name[0].toUpperCase()}
             {participant.id === hostId && (
               <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-yellow-400 text-[10px]" title="Host">

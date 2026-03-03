@@ -8,9 +8,10 @@ export const CARD_VALUES = ['1', '2', '3', '5', '8', '13', '21', '?', '☕']
 
 interface CardDeckProps {
   onSelectCard?: (value: string) => void
+  compact?: boolean
 }
 
-export function CardDeck({ onSelectCard }: CardDeckProps = {}) {
+export function CardDeck({ onSelectCard, compact = false }: CardDeckProps = {}) {
   const myVote = usePokerStore((s) => s.myVote)
   const phase = usePokerStore((s) => s.phase)
   const selectCard = usePokerStore((s) => s.selectCard)
@@ -26,7 +27,7 @@ export function CardDeck({ onSelectCard }: CardDeckProps = {}) {
   }
 
   return (
-    <div className="flex flex-wrap justify-center gap-3">
+    <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
       {CARD_VALUES.map((value) => (
         <PokerCard
           key={value}
@@ -35,6 +36,7 @@ export function CardDeck({ onSelectCard }: CardDeckProps = {}) {
           isRevealed={isRevealed}
           vote={myVote ?? undefined}
           disabled={isRevealed}
+          compact={compact}
           onClick={isRevealed ? undefined : () => handleClick(value)}
         />
       ))}

@@ -1,11 +1,14 @@
 'use client'
 
+import { useState } from 'react'
+
 import { JiraTicket } from '@/store/usePokerStore'
 
 interface TicketDetailProps {
   ticket: JiraTicket
   ticketIndex: number
   totalTickets: number
+  collapsible?: boolean
 }
 
 const PRIORITY_COLORS: Record<string, string> = {
@@ -16,11 +19,16 @@ const PRIORITY_COLORS: Record<string, string> = {
   Lowest: 'text-blue-400',
 }
 
-export function TicketDetail({ ticket, ticketIndex, totalTickets }: TicketDetailProps) {
+export function TicketDetail({ ticket, ticketIndex, totalTickets, collapsible = false }: TicketDetailProps) {
+  const [isExpanded, setIsExpanded] = useState(true)
+
   return (
     <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
       {/* Header: key + summary + progress */}
-      <div className="border-b border-gray-100 px-5 py-4">
+      <div
+        className={`border-b border-gray-100 px-5 py-4 ${collapsible ? 'cursor-pointer lg:cursor-default' : ''}`}
+        onClick={collapsible ? () => setIsExpanded((v) => !v) : undefined}
+      >
         <div className="flex items-center justify-between">
           <div className="flex items-baseline gap-3">
             <span className="rounded bg-gray-100 px-2 py-0.5 font-mono text-sm font-semibold text-gray-700">
@@ -41,15 +49,28 @@ export function TicketDetail({ ticket, ticketIndex, totalTickets }: TicketDetail
               </span>
             )}
           </div>
-          <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700">
-            {ticketIndex + 1} / {totalTickets}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700">
+              {ticketIndex + 1} / {totalTickets}
+            </span>
+            {collapsible && (
+              <svg
+                className={`h-4 w-4 text-gray-400 transition-transform lg:hidden ${isExpanded ? 'rotate-180' : ''}`}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            )}
+          </div>
         </div>
         <h2 className="mt-2 text-lg font-semibold text-gray-900">{ticket.summary}</h2>
       </div>
 
-      {/* Body: 2-column layout */}
-      <div className="flex flex-col gap-0 md:flex-row">
+      {/* Body: 2-column layout — collapsible on mobile */}
+      <div className={collapsible && !isExpanded ? 'hidden lg:flex lg:flex-col lg:gap-0 md:flex-row' : 'flex flex-col gap-0 md:flex-row'}>
         {/* Left: description */}
         <div className="flex-1 border-b border-gray-100 px-5 py-4 md:border-r md:border-b-0">
           <p className="mb-2 text-xs font-medium tracking-wide text-gray-400 uppercase">설명</p>
