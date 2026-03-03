@@ -13,6 +13,7 @@ export type DataMessage =
   | { type: 'sync_response'; state: SyncState }
   | { type: 'room_closed' }
   | { type: 'kick'; targetId: string }
+  | { type: 'host_migrated'; newHostId: string }
 
 interface UseWebRTCOptions {
   roomId: string

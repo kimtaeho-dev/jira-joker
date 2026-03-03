@@ -6,6 +6,7 @@ import { use, useCallback, useEffect, useRef, useState } from 'react'
 import { CardDeck } from '@/components/poker/CardDeck'
 import { JoinRoomForm } from '@/components/poker/JoinRoomForm'
 import { PlayerList } from '@/components/poker/PlayerList'
+import { SessionSummary } from '@/components/poker/SessionSummary'
 import { TicketDetail } from '@/components/poker/TicketDetail'
 import { TicketHistory } from '@/components/poker/TicketHistory'
 import { VoteResults } from '@/components/poker/VoteResults'
@@ -39,9 +40,12 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
   const applySyncState = usePokerStore((s) => s.applySyncState)
   const isHost = usePokerStore((s) => s.isHost)
   const leaveRoom = usePokerStore((s) => s.leaveRoom)
+  const migrateHost = usePokerStore((s) => s.migrateHost)
 
   const [roomValid, setRoomValid] = useState<boolean | null>(null)
   const [disconnectReason, setDisconnectReason] = useState<'host_left' | 'kicked' | null>(null)
+  const [hostWaiting, setHostWaiting] = useState(false)
+  const [departedHostName, setDepartedHostName] = useState<string | null>(null)
 
   const myVoteRef = useRef(myVote)
   useEffect(() => { myVoteRef.current = myVote }, [myVote])
@@ -79,6 +83,14 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
       .then((data: { exists: boolean }) => setRoomValid(data.exists))
       .catch(() => setRoomValid(false))
   }, [hydrated, myName, storeRoomId, roomId])
+
+  // beforeunload: 호스트가 실수로 탭을 닫는 것을 방지
+  useEffect(() => {
+    if (!isHost()) return
+    const handler = (e: BeforeUnloadEvent) => e.preventDefault()
+    window.addEventListener('beforeunload', handler)
+    return () => window.removeEventListener('beforeunload', handler)
+  }, [isHost])
 
   const isAllVoted =
     phase === 'voting' &&
@@ -133,10 +145,20 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
             removeParticipant(msg.targetId)
           }
           break
+        case 'host_migrated':
+          migrateHost(msg.newHostId)
+          setHostWaiting(false)
+          setDepartedHostName(null)
+          break
       }
     },
-    [setParticipantVoted, setParticipantVote, resetRound, nextTicket, applySyncState, removeParticipant],
+    [setParticipantVoted, setParticipantVote, resetRound, nextTicket, applySyncState, removeParticipant, migrateHost],
   )
+
+  const departedHostNameRef = useRef(departedHostName)
+  useEffect(() => { departedHostNameRef.current = departedHostName }, [departedHostName])
+  const hostWaitingRef = useRef(hostWaiting)
+  useEffect(() => { hostWaitingRef.current = hostWaiting }, [hostWaiting])
 
   const { broadcast, sendToPeer } = useWebRTC({
     roomId,
@@ -144,12 +166,33 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
     myName: myName ?? '',
     enabled: !!myName && storeRoomId === roomId,
     onMessage: handleDataMessage,
-    onPeerConnected: (peerId, name) =>
-      addParticipant({ id: peerId, name, hasVoted: false }),
+    onPeerConnected: (peerId, name) => {
+      addParticipant({ id: peerId, name, hasVoted: false })
+      // 호스트 대기 중 → 이름 매칭으로 호스트 복원
+      if (hostWaitingRef.current && departedHostNameRef.current && name === departedHostNameRef.current) {
+        migrateHost(peerId)
+        setHostWaiting(false)
+        setDepartedHostName(null)
+        // 다른 참가자들에게도 호스트 변경 알림
+        setTimeout(() => {
+          broadcastRef.current({ type: 'host_migrated', newHostId: peerId })
+        }, 500)
+      }
+    },
     onPeerDisconnected: (peerId) => {
+      const state = usePokerStore.getState()
+      const departedPeer = state.participants.find((p) => p.id === peerId)
       removeParticipant(peerId)
-      if (peerId === usePokerStore.getState().hostId) {
-        setDisconnectReason('host_left')
+
+      if (peerId === state.hostId) {
+        // 호스트 이탈: 남은 참가자가 본인뿐이면 방 종료, 아니면 대기
+        const remaining = state.participants.filter((p) => p.id !== peerId && p.id !== state.myId)
+        if (remaining.length === 0) {
+          setDisconnectReason('host_left')
+        } else {
+          setDepartedHostName(departedPeer?.name ?? null)
+          setHostWaiting(true)
+        }
       }
     },
   })
@@ -210,9 +253,6 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
   }, [removeParticipant])
 
   const handleLeaveRoom = useCallback(() => {
-    if (usePokerStore.getState().isHost()) {
-      broadcastRef.current({ type: 'room_closed' })
-    }
     leaveRoom()
     router.push('/')
   }, [leaveRoom, router])
@@ -261,6 +301,28 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
       )
     }
     return <JoinRoomForm roomId={roomId} />
+  }
+
+  // 호스트 재접속 대기 오버레이
+  if (hostWaiting) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div className="mx-4 w-full max-w-sm rounded-2xl bg-white p-8 text-center shadow-xl">
+          <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600" />
+          <h2 className="text-xl font-bold text-gray-900">호스트 재접속 대기 중...</h2>
+          <p className="mt-2 text-sm text-gray-500">호스트가 돌아오면 자동으로 복원됩니다</p>
+          <button
+            onClick={() => {
+              leaveRoom()
+              router.push('/')
+            }}
+            className="mt-6 rounded-lg bg-gray-200 px-6 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-300"
+          >
+            홈으로 돌아가기
+          </button>
+        </div>
+      </div>
+    )
   }
 
   // disconnectReason overlay (호스트 이탈 / 추방)
@@ -317,15 +379,17 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
     )
   }
 
+  const completedTickets = usePokerStore((s) => s.completedTickets)
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="border-b border-gray-200 bg-white px-6 py-3 shadow-sm">
-        <div className="mx-auto flex max-w-4xl items-center justify-between">
+        <div className="mx-auto flex max-w-6xl items-center justify-between">
           {/* Left: Title */}
           <span className="text-xl font-bold text-gray-900">Jira Joker</span>
 
           {/* Center: Room ID + Copy */}
-          <div className="flex items-center gap-2">
+          <div className="hidden items-center gap-2 sm:flex">
             <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-mono text-gray-500">
               {roomId.slice(0, 8)}…
             </span>
@@ -343,7 +407,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-600">
                 {myName?.[0]?.toUpperCase() ?? '?'}
               </div>
-              <span className="text-sm font-medium text-gray-700">{myName}</span>
+              <span className="hidden text-sm font-medium text-gray-700 sm:inline">{myName}</span>
             </div>
             <button
               onClick={handleLeaveRoom}
@@ -355,48 +419,68 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
         </div>
       </header>
 
-      <main className="mx-auto max-w-4xl space-y-8 px-6 py-10">
-        {ticket ? (
-          <TicketDetail
-            ticket={ticket}
-            ticketIndex={currentTicketIndex}
+      <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:py-10">
+        {!ticket && tickets.length > 0 ? (
+          <SessionSummary
+            completedTickets={completedTickets}
             totalTickets={tickets.length}
+            onLeave={handleLeaveRoom}
           />
-        ) : tickets.length > 0 ? (
-          <div className="rounded-xl border border-green-200 bg-green-50 p-4 shadow-sm text-center">
-            <p className="text-lg font-semibold text-green-800">All tickets completed!</p>
-            <p className="mt-1 text-sm text-green-600">{tickets.length} tickets estimated</p>
-          </div>
-        ) : null}
+        ) : (
+          <div className="flex flex-col gap-6 lg:flex-row">
+            {/* Left Panel: Ticket Detail + History */}
+            <div className="flex-1 space-y-6">
+              {ticket && (
+                <TicketDetail
+                  ticket={ticket}
+                  ticketIndex={currentTicketIndex}
+                  totalTickets={tickets.length}
+                  collapsible
+                />
+              )}
 
-        <section>
-          <h3 className="mb-4 text-xs font-medium tracking-wide text-gray-500 uppercase">
-            Participants
-          </h3>
-          <PlayerList onKick={handleKick} isHost={isHost()} myId={myId} />
-        </section>
+              {/* TicketHistory — desktop: left bottom */}
+              <div className="hidden lg:block">
+                <TicketHistory />
+              </div>
+            </div>
 
-        {ticket && (
-          <section>
-            <h3 className="mb-4 text-xs font-medium tracking-wide text-gray-500 uppercase">
-              Your Vote
-            </h3>
-            <CardDeck onSelectCard={handleSelectCard} />
-          </section>
-        )}
+            {/* Right Panel: Participants + CardDeck + Countdown + VoteResults */}
+            <div className="w-full space-y-6 lg:w-96 lg:shrink-0">
+              <section>
+                <h3 className="mb-3 text-xs font-medium tracking-wide text-gray-500 uppercase">
+                  Participants
+                </h3>
+                <PlayerList onKick={handleKick} isHost={isHost()} myId={myId} />
+              </section>
 
-        {countdown !== null && countdown > 0 && (
-          <div className="flex justify-center">
-            <div className="rounded-xl bg-blue-50 px-8 py-3 text-center">
-              <p className="text-sm font-medium text-blue-600">모든 참가자가 투표를 완료했습니다</p>
-              <p className="mt-1 text-2xl font-bold text-blue-700">{countdown}초 후 결과 공개</p>
+              {ticket && (
+                <section>
+                  <h3 className="mb-3 text-xs font-medium tracking-wide text-gray-500 uppercase">
+                    Your Vote
+                  </h3>
+                  <CardDeck onSelectCard={handleSelectCard} compact />
+                </section>
+              )}
+
+              {countdown !== null && countdown > 0 && (
+                <div className="flex justify-center">
+                  <div className="rounded-xl bg-blue-50 px-8 py-3 text-center">
+                    <p className="text-sm font-medium text-blue-600">모든 참가자가 투표를 완료했습니다</p>
+                    <p className="mt-1 text-2xl font-bold text-blue-700">{countdown}초 후 결과 공개</p>
+                  </div>
+                </div>
+              )}
+
+              <VoteResults onReset={handleReset} onNext={handleNext} isHost={isHost()} />
+
+              {/* TicketHistory — mobile: bottom */}
+              <div className="lg:hidden">
+                <TicketHistory />
+              </div>
             </div>
           </div>
         )}
-
-        <VoteResults onReset={handleReset} onNext={handleNext} isHost={isHost()} />
-
-        <TicketHistory />
       </main>
     </div>
   )

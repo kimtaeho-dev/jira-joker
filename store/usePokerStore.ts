@@ -61,6 +61,7 @@ interface PokerState {
   revealVotes: () => void
   resetRound: () => void
   nextTicket: () => void
+  migrateHost: (newHostId: string) => void
   // Multi-peer actions
   addParticipant: (p: Participant) => void
   removeParticipant: (id: string) => void
@@ -186,6 +187,8 @@ export const usePokerStore = create<PokerState>()(
           })),
         })
       },
+
+      migrateHost: (newHostId) => set({ hostId: newHostId }),
 
       addParticipant: (p) =>
         set((state) => {
