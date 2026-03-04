@@ -48,7 +48,7 @@ npm run lint     # ESLint
 ### Room Management
 
 - **Room 유효성 검사:** 새 참가자가 `/room/[roomId]`에 접근 시 `GET /api/room/[roomId]`로 방 존재 여부 확인 → 미존재 시 not-found UI 표시
-- **호스트 능동 이탈:** 호스트가 "나가기" 클릭 시 `room_closed` broadcast → 참가자 전원 `leaveRoom()` 호출 + sessionStorage 정리
+- **호스트 능동 이탈:** 호스트가 "방 종료" 클릭 시 `window.confirm()` 확인 → `room_closed` broadcast → 참가자에게 "방이 종료되었습니다" 오버레이 표시 (store 유지, 오버레이에서 홈 이동 시 정리). 호스트 버튼은 빨간 배경("방 종료"), 참가자는 기존 스타일("나가기")
 - **참가자 능동 이탈:** 참가자 "나가기" 클릭 시 `leaving` DataChannel broadcast → 즉시 반영. `beforeunload` 시 `sendBeacon`으로 서버에 `leave` POST + DataChannel `leaving` broadcast (탭 닫기에도 ~100ms 내 반영)
 - **호스트 이탈 보호:** 호스트 SSE 끊김(비자발적) 시 즉시 종료하지 않고 "호스트 재접속 대기 중" 오버레이 표시. 호스트가 같은 이름으로 재접속하면 `host_migrated` broadcast로 hostId 자동 복원. beforeunload로 실수 탭 닫기 방지. 참가자 0명일 때만 방 종료
 - **대기 화면 분리:** 2인 미만 대기 시 호스트는 초대 링크 공유 UI, 참가자는 "호스트와 연결 중..." 간소화 UI 표시

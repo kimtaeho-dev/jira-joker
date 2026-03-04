@@ -147,7 +147,6 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
           applySyncState(msg.state)
           break
         case 'room_closed':
-          leaveRoom()
           setDisconnectReason('host_left')
           break
         case 'kick':
@@ -175,7 +174,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
         }
       }
     },
-    [setParticipantVoted, setParticipantVote, resetRound, nextTicket, applySyncState, removeParticipant, migrateHost, leaveRoom],
+    [setParticipantVoted, setParticipantVote, resetRound, nextTicket, applySyncState, removeParticipant, migrateHost],
   )
 
   const departedHostNameRef = useRef(departedHostName)
@@ -273,6 +272,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
 
   const handleLeaveRoom = useCallback(() => {
     if (isHost()) {
+      if (!window.confirm('방을 종료하시겠습니까?\n모든 참가자의 연결이 끊어집니다.')) return
       broadcastRef.current({ type: 'room_closed' })
     } else {
       try { broadcastRef.current({ type: 'leaving', peerId: myId }) } catch {}
@@ -477,9 +477,13 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
             </div>
             <button
               onClick={handleLeaveRoom}
-              className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-red-500 transition-colors hover:bg-red-50 hover:border-red-200"
+              className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                isHost()
+                  ? 'bg-red-500 text-white hover:bg-red-600'
+                  : 'border border-gray-200 text-red-500 hover:bg-red-50 hover:border-red-200'
+              }`}
             >
-              나가기
+              {isHost() ? '방 종료' : '나가기'}
             </button>
           </div>
         </div>
