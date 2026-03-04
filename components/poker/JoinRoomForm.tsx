@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { usePokerStore } from '@/store/usePokerStore'
 
@@ -8,10 +8,21 @@ interface JoinRoomFormProps {
   roomId: string
 }
 
+const PARTICIPANT_NAME_KEY = 'jira-joker-participant-name'
+
 export function JoinRoomForm({ roomId }: JoinRoomFormProps) {
   const [name, setName] = useState('')
   const [copied, setCopied] = useState(false)
   const joinRoom = usePokerStore((s) => s.joinRoom)
+
+  useEffect(() => {
+    try {
+      const cached = localStorage.getItem(PARTICIPANT_NAME_KEY)
+      if (cached) setName(cached)
+    } catch {
+      // SSR or private mode
+    }
+  }, [])
 
   const roomUrl =
     typeof window !== 'undefined' ? `${window.location.origin}/room/${roomId}` : `/room/${roomId}`
@@ -24,6 +35,11 @@ export function JoinRoomForm({ roomId }: JoinRoomFormProps) {
 
   const handleJoin = () => {
     if (!name.trim()) return
+    try {
+      localStorage.setItem(PARTICIPANT_NAME_KEY, name.trim())
+    } catch {
+      // SSR or private mode
+    }
     joinRoom(name.trim(), roomId)
   }
 
