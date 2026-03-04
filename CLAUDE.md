@@ -39,6 +39,8 @@ npm run lint     # ESLint
 - Participants form a **mesh network** (each peer connects to all others)
 - Signaling is required to exchange SDP offers/answers before P2P is established
 - STUN 서버 다중화 (`stun.l.google.com`, `stun1`, `stun2`) — 방화벽 환경 fallback
+- ICE candidate 배치 전송 (100ms 윈도우) — 시그널링 왕복 횟수 절감
+- `iceConnectionState` 감시로 피어 이탈 빠른 감지; SSE heartbeat 15초 주기
 - During voting: only **vote completion status** is broadcast (actual card value stays local)
 - After all participants vote: 2-second countdown, then actual values sync over DataChannels
 - **DataMessage types:** `voted`, `reveal`, `reset`, `next`, `sync_request`, `sync_response`, `room_closed`, `kick`, `host_migrated`

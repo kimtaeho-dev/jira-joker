@@ -110,10 +110,28 @@ export function useWebRTC({
       const pc = new RTCPeerConnection(RTC_CONFIG)
       peersRef.current.set(peerId, { pc, name: peerName })
 
-      // ICE candidate 전송
+      // ICE candidate 배치 전송 (100ms 윈도우로 묶어서 왕복 횟수 절감)
+      let pendingCandidates: RTCIceCandidateInit[] = []
+      let candidateTimer: ReturnType<typeof setTimeout> | null = null
+
+      const flushCandidates = () => {
+        if (pendingCandidates.length > 0) {
+          sendSignal('ice_candidates', peerId, { candidates: pendingCandidates })
+          pendingCandidates = []
+        }
+        candidateTimer = null
+      }
+
       pc.onicecandidate = ({ candidate }) => {
         if (candidate) {
-          sendSignal('ice_candidate', peerId, { candidate })
+          pendingCandidates.push(candidate.toJSON())
+          if (!candidateTimer) {
+            candidateTimer = setTimeout(flushCandidates, 100)
+          }
+        } else {
+          // null candidate = gathering 완료, 잔여 후보 즉시 전송
+          if (candidateTimer) clearTimeout(candidateTimer)
+          flushCandidates()
         }
       }
 
@@ -123,6 +141,15 @@ export function useWebRTC({
           pc.connectionState === 'failed' ||
           pc.connectionState === 'closed'
         ) {
+          peersRef.current.delete(peerId)
+          onPeerDisconnectedRef.current(peerId)
+        }
+      }
+
+      // iceConnectionState: connectionState보다 빠르게 실패 감지
+      pc.oniceconnectionstatechange = () => {
+        if (pc.iceConnectionState === 'failed') {
+          pc.close()
           peersRef.current.delete(peerId)
           onPeerDisconnectedRef.current(peerId)
         }
@@ -227,18 +254,20 @@ export function useWebRTC({
       }
     })
 
-    // ICE candidate 수신
-    eventSource.addEventListener('ice_candidate', async (e) => {
-      const { from, candidate } = JSON.parse((e as MessageEvent).data) as {
+    // ICE candidates 배치 수신
+    eventSource.addEventListener('ice_candidates', async (e) => {
+      const { from, candidates } = JSON.parse((e as MessageEvent).data) as {
         from: string
-        candidate: RTCIceCandidateInit
+        candidates: RTCIceCandidateInit[]
       }
       const entry = peersRef.current.get(from)
       if (!entry) return
-      try {
-        await entry.pc.addIceCandidate(new RTCIceCandidate(candidate))
-      } catch {
-        // candidate error
+      for (const candidate of candidates) {
+        try {
+          await entry.pc.addIceCandidate(new RTCIceCandidate(candidate))
+        } catch {
+          // candidate error
+        }
       }
     })
 

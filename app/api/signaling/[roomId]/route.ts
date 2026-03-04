@@ -40,14 +40,14 @@ export async function GET(
       // 기존 피어들에게 신규 피어 알림
       broadcast(roomId, peerId, 'peer_joined', { peerId, name })
 
-      // 30초 heartbeat
+      // 15초 heartbeat (dead connection 빠른 감지)
       const heartbeatInterval = setInterval(() => {
         try {
           controller.enqueue(encoder.encode(': heartbeat\n\n'))
         } catch {
           clearInterval(heartbeatInterval)
         }
-      }, 30_000)
+      }, 15_000)
 
       // 연결 종료 감지
       request.signal.addEventListener('abort', () => {
