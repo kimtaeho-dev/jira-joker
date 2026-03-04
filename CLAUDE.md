@@ -43,13 +43,15 @@ npm run lint     # ESLint
 - `iceConnectionState` 감시로 피어 이탈 빠른 감지; SSE heartbeat 15초 주기
 - During voting: only **vote completion status** is broadcast (actual card value stays local)
 - After all participants vote: 2-second countdown, then actual values sync over DataChannels
-- **DataMessage types:** `voted`, `reveal`, `reset`, `next`, `sync_request`, `sync_response`, `room_closed`, `kick`, `host_migrated`
+- **DataMessage types:** `voted`, `reveal`, `reset`, `next`, `sync_request`, `sync_response`, `room_closed`, `kick`, `host_migrated`, `leaving`
 
 ### Room Management
 
 - **Room 유효성 검사:** 새 참가자가 `/room/[roomId]`에 접근 시 `GET /api/room/[roomId]`로 방 존재 여부 확인 → 미존재 시 not-found UI 표시
 - **호스트 능동 이탈:** 호스트가 "나가기" 클릭 시 `room_closed` broadcast → 참가자 전원 `leaveRoom()` 호출 + sessionStorage 정리
+- **참가자 능동 이탈:** 참가자 "나가기" 클릭 시 `leaving` DataChannel broadcast → 즉시 반영. `beforeunload` 시 `sendBeacon`으로 서버에 `leave` POST + DataChannel `leaving` broadcast (탭 닫기에도 ~100ms 내 반영)
 - **호스트 이탈 보호:** 호스트 SSE 끊김(비자발적) 시 즉시 종료하지 않고 "호스트 재접속 대기 중" 오버레이 표시. 호스트가 같은 이름으로 재접속하면 `host_migrated` broadcast로 hostId 자동 복원. beforeunload로 실수 탭 닫기 방지. 참가자 0명일 때만 방 종료
+- **대기 화면 분리:** 2인 미만 대기 시 호스트는 초대 링크 공유 UI, 참가자는 "호스트와 연결 중..." 간소화 UI 표시
 - **호스트 Kick:** 호스트가 `kick` 메시지 broadcast → 대상에게 추방 overlay, 나머지 참가자 목록에서 제거
 - **핵심 제약:** 서버(signalingStore)는 room→peers SSE 스트림만 관리하며 hostId 개념 없음. host 판별은 전적으로 클라이언트(Zustand) 기반
 - **signalingStore 싱글톤:** `globalThis` 패턴으로 rooms Map 보존 (HMR/모듈 재평가 시 상태 유실 방지)

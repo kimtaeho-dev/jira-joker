@@ -14,6 +14,7 @@ export type DataMessage =
   | { type: 'room_closed' }
   | { type: 'kick'; targetId: string }
   | { type: 'host_migrated'; newHostId: string }
+  | { type: 'leaving'; peerId: string }
 
 interface UseWebRTCOptions {
   roomId: string

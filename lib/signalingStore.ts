@@ -26,11 +26,13 @@ export function addPeer(
   getRoom(roomId).set(peerId, { name, controller, encoder })
 }
 
-export function removePeer(roomId: string, peerId: string): void {
+export function removePeer(roomId: string, peerId: string): boolean {
   const room = rooms.get(roomId)
-  if (!room) return
+  if (!room) return false
+  const existed = room.has(peerId)
   room.delete(peerId)
   if (room.size === 0) rooms.delete(roomId)
+  return existed
 }
 
 export function sendToPeer(

@@ -52,8 +52,10 @@ export async function GET(
       // 연결 종료 감지
       request.signal.addEventListener('abort', () => {
         clearInterval(heartbeatInterval)
-        removePeer(roomId, peerId)
-        broadcast(roomId, peerId, 'peer_left', { peerId })
+        const removed = removePeer(roomId, peerId)
+        if (removed) {
+          broadcast(roomId, peerId, 'peer_left', { peerId })
+        }
         try {
           controller.close()
         } catch {
@@ -85,6 +87,14 @@ export async function POST(
   }
 
   const { from, to, type, payload } = body
+
+  if (type === 'leave') {
+    const removed = removePeer(roomId, from)
+    if (removed) {
+      broadcast(roomId, from, 'peer_left', { peerId: from })
+    }
+    return new Response(null, { status: 204 })
+  }
 
   if (to) {
     sendToPeer(roomId, to, type, { from, ...( payload as object) })
