@@ -27,7 +27,7 @@ npm run lint     # ESLint
 ### API Proxy Layer
 
 - **`/api/jira`** — Jira API Token을 서버 측에서 안전하게 처리
-  - `GET /api/jira` — 프로젝트의 이슈 목록 조회
+  - `GET /api/jira` — 프로젝트의 이슈 목록 조회 (Cloud: `/search/jql`, Server/DC: `/search` 자동 분기)
   - `PUT /api/jira` — Jira 이슈의 Story Points 필드 업데이트
 - **`/api/room/[roomId]`** — Room 존재 여부 확인
   - `GET` → `{ exists: boolean }` (signalingStore의 rooms Map 기반)
@@ -38,6 +38,7 @@ npm run lint     # ESLint
 - Room creation generates a UUID used as the invitation link identifier
 - Participants form a **mesh network** (each peer connects to all others)
 - Signaling is required to exchange SDP offers/answers before P2P is established
+- STUN 서버 다중화 (`stun.l.google.com`, `stun1`, `stun2`) — 방화벽 환경 fallback
 - During voting: only **vote completion status** is broadcast (actual card value stays local)
 - After all participants vote: 2-second countdown, then actual values sync over DataChannels
 - **DataMessage types:** `voted`, `reveal`, `reset`, `next`, `sync_request`, `sync_response`, `room_closed`, `kick`, `host_migrated`
@@ -49,6 +50,7 @@ npm run lint     # ESLint
 - **호스트 이탈 보호:** 호스트 SSE 끊김(비자발적) 시 즉시 종료하지 않고 "호스트 재접속 대기 중" 오버레이 표시. 호스트가 같은 이름으로 재접속하면 `host_migrated` broadcast로 hostId 자동 복원. beforeunload로 실수 탭 닫기 방지. 참가자 0명일 때만 방 종료
 - **호스트 Kick:** 호스트가 `kick` 메시지 broadcast → 대상에게 추방 overlay, 나머지 참가자 목록에서 제거
 - **핵심 제약:** 서버(signalingStore)는 room→peers SSE 스트림만 관리하며 hostId 개념 없음. host 판별은 전적으로 클라이언트(Zustand) 기반
+- **signalingStore 싱글톤:** `globalThis` 패턴으로 rooms Map 보존 (HMR/모듈 재평가 시 상태 유실 방지)
 
 ### State Management (Zustand)
 

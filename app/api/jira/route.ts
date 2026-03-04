@@ -91,7 +91,7 @@ export async function GET(req: NextRequest) {
       if (!epicKey) {
         return NextResponse.json({ error: 'epicKey is required' }, { status: 400 })
       }
-      const url = `${apiBase}/search/jql`
+      const url = email ? `${apiBase}/search/jql` : `${apiBase}/search`
       const res = await fetch(url, {
         method: 'POST',
         headers: { ...headers, 'Content-Type': 'application/json' },

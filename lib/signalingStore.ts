@@ -5,7 +5,11 @@ interface PeerEntry {
 }
 
 // roomId → peerId → PeerEntry
-const rooms = new Map<string, Map<string, PeerEntry>>()
+// globalThis 패턴: HMR/모듈 재평가 시에도 rooms 데이터 유지 (Prisma 권장 패턴과 동일)
+const globalForSignaling = globalThis as unknown as {
+  signalingRooms?: Map<string, Map<string, PeerEntry>>
+}
+const rooms = (globalForSignaling.signalingRooms ??= new Map<string, Map<string, PeerEntry>>())
 
 function getRoom(roomId: string): Map<string, PeerEntry> {
   if (!rooms.has(roomId)) rooms.set(roomId, new Map())
