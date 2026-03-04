@@ -74,7 +74,14 @@ export async function GET(req: NextRequest) {
         )
       }
       const data = await res.json()
-      if (data.fields?.issuetype?.name !== '에픽') {
+      const typeName = (data.fields?.issuetype?.name ?? '').toLowerCase()
+      const hierarchyLevel = data.fields?.issuetype?.hierarchyLevel
+      const isEpic =
+        hierarchyLevel === 1 ||
+        typeName === 'epic' ||
+        typeName === '에픽' ||
+        typeName === '큰틀'
+      if (!isEpic) {
         return NextResponse.json(
           {
             error: `${epicKey}는 Epic 타입이 아닙니다 (${data.fields?.issuetype?.name ?? 'Unknown'})`,
