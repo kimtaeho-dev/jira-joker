@@ -84,13 +84,24 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
       .catch(() => setRoomValid(false))
   }, [hydrated, myName, storeRoomId, roomId])
 
-  // beforeunload: 호스트가 실수로 탭을 닫는 것을 방지
+  // beforeunload: 호스트 confirm dialog + 전체 참가자 즉시 이탈 알림
   useEffect(() => {
-    if (!isHost()) return
-    const handler = (e: BeforeUnloadEvent) => e.preventDefault()
+    if (!myId || !storeRoomId) return
+    const handler = (e: BeforeUnloadEvent) => {
+      if (isHost()) e.preventDefault() // 호스트만 confirm dialog
+      // 서버에 즉시 알림 (sendBeacon — 탭 닫힘에도 작동)
+      try {
+        navigator.sendBeacon(
+          `/api/signaling/${storeRoomId}`,
+          new Blob([JSON.stringify({ from: myId, type: 'leave' })], { type: 'application/json' })
+        )
+      } catch {}
+      // DataChannel로도 즉시 알림 (best-effort)
+      try { broadcastRef.current({ type: 'leaving', peerId: myId }) } catch {}
+    }
     window.addEventListener('beforeunload', handler)
     return () => window.removeEventListener('beforeunload', handler)
-  }, [isHost])
+  }, [myId, storeRoomId, isHost])
 
   const isAllVoted =
     phase === 'voting' &&
@@ -151,6 +162,17 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
           setHostWaiting(false)
           setDepartedHostName(null)
           break
+        case 'leaving': {
+          const state = usePokerStore.getState()
+          if (!state.participants.some((p) => p.id === msg.peerId)) return
+          const departedPeer = state.participants.find((p) => p.id === msg.peerId)
+          removeParticipant(msg.peerId)
+          if (msg.peerId === state.hostId) {
+            setDepartedHostName(departedPeer?.name ?? null)
+            setHostWaiting(true)
+          }
+          break
+        }
       }
     },
     [setParticipantVoted, setParticipantVote, resetRound, nextTicket, applySyncState, removeParticipant, migrateHost, leaveRoom],
@@ -252,10 +274,12 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
   const handleLeaveRoom = useCallback(() => {
     if (isHost()) {
       broadcastRef.current({ type: 'room_closed' })
+    } else {
+      try { broadcastRef.current({ type: 'leaving', peerId: myId }) } catch {}
     }
     leaveRoom()
     router.push('/')
-  }, [leaveRoom, router, isHost])
+  }, [leaveRoom, router, isHost, myId])
 
   // 클립보드 복사
   const [copied, setCopied] = useState(false)
@@ -354,27 +378,42 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
   if (participants.length < 2) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-gray-50 px-6">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900">게임 준비 중</h2>
-          <p className="mt-2 text-gray-500">다른 참가자를 기다리는 중입니다...</p>
-        </div>
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600" />
-        <div className="flex w-full max-w-sm flex-col items-center gap-3 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-          <p className="text-sm font-medium text-gray-700">초대 링크를 공유하세요</p>
-          <div className="flex w-full items-center gap-2">
-            <input
-              readOnly
-              value={inviteUrl}
-              className="min-w-0 flex-1 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-600 outline-none"
-            />
-            <button
-              onClick={handleCopyInvite}
-              className="shrink-0 rounded-lg bg-gray-900 px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-gray-700"
-            >
-              {copied ? '복사됨!' : '복사'}
-            </button>
-          </div>
-        </div>
+        {isHost() ? (
+          <>
+            <div className="text-center">
+              <h2 className="text-2xl font-bold text-gray-900">게임 준비 중</h2>
+              <p className="mt-2 text-gray-500">다른 참가자를 기다리는 중입니다...</p>
+            </div>
+            <div className="h-10 w-10 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600" />
+            <div className="flex w-full max-w-sm flex-col items-center gap-3 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+              <p className="text-sm font-medium text-gray-700">초대 링크를 공유하세요</p>
+              <div className="flex w-full items-center gap-2">
+                <input
+                  readOnly
+                  value={inviteUrl}
+                  className="min-w-0 flex-1 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-600 outline-none"
+                />
+                <button
+                  onClick={handleCopyInvite}
+                  className="shrink-0 rounded-lg bg-gray-900 px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-gray-700"
+                >
+                  {copied ? '복사됨!' : '복사'}
+                </button>
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="text-center">
+              <h2 className="text-2xl font-bold text-gray-900">호스트와 연결 중...</h2>
+              <p className="mt-2 text-gray-500">곧 게임이 시작됩니다</p>
+            </div>
+            <div className="h-10 w-10 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600" />
+            <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-mono text-gray-500">
+              Room: {roomId.slice(0, 8)}…
+            </span>
+          </>
+        )}
       </div>
     )
   }
