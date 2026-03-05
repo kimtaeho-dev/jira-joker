@@ -46,6 +46,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
   const [hostWaiting, setHostWaiting] = useState(false)
   const [departedHostName, setDepartedHostName] = useState<string | null>(null)
   const [panelOpen, setPanelOpen] = useState(true)
+  const [connectionFailed, setConnectionFailed] = useState(false)
 
   const myVoteRef = useRef(myVote)
   useEffect(() => { myVoteRef.current = myVote }, [myVote])
@@ -188,6 +189,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
     myName: myName ?? '',
     enabled: !!myName && storeRoomId === roomId,
     onMessage: handleDataMessage,
+    onConnectionFailed: () => setConnectionFailed(true),
     onPeerConnected: (peerId, name) => {
       addParticipant({ id: peerId, name, hasVoted: false })
       // 호스트 대기 중 → 이름 매칭으로 호스트 복원
@@ -400,6 +402,42 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
                   {copied ? '복사됨!' : '복사'}
                 </button>
               </div>
+            </div>
+          </>
+        ) : connectionFailed ? (
+          <>
+            <div className="text-center">
+              <h2 className="text-2xl font-bold text-red-600">연결에 실패했습니다</h2>
+              <p className="mt-2 text-gray-500">호스트와 P2P 연결을 수립할 수 없습니다</p>
+            </div>
+            <div className="w-full max-w-md rounded-xl border border-red-200 bg-red-50 p-5 text-sm text-gray-700">
+              <p className="font-semibold text-red-700">회사 네트워크 환경인 경우:</p>
+              <ul className="mt-2 list-inside list-disc space-y-1 text-gray-600">
+                <li>방화벽이 WebRTC(UDP) 트래픽을 차단할 수 있습니다</li>
+                <li>TURN 서버 설정이 필요할 수 있습니다</li>
+                <li>VPN 사용 시 연결이 제한될 수 있습니다</li>
+              </ul>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setConnectionFailed(false)
+                  leaveRoom()
+                  router.push(`/room/${roomId}`)
+                }}
+                className="rounded-lg bg-gray-900 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-gray-700"
+              >
+                다시 시도
+              </button>
+              <button
+                onClick={() => {
+                  leaveRoom()
+                  router.push('/')
+                }}
+                className="rounded-lg border border-gray-200 px-6 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+              >
+                홈으로
+              </button>
             </div>
           </>
         ) : (

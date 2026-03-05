@@ -16,6 +16,11 @@ export type DataMessage =
   | { type: 'host_migrated'; newHostId: string }
   | { type: 'leaving'; peerId: string }
 
+// ICE 연결 타임아웃: checking 상태가 이 시간 이상 지속되면 ICE restart 시도
+const ICE_TIMEOUT_MS = 15_000
+// ICE restart 후에도 연결 안 되면 실패로 처리
+const ICE_RESTART_TIMEOUT_MS = 10_000
+
 interface UseWebRTCOptions {
   roomId: string
   myId: string
@@ -24,15 +29,33 @@ interface UseWebRTCOptions {
   onMessage: (msg: DataMessage) => void
   onPeerConnected: (peerId: string, name: string) => void
   onPeerDisconnected: (peerId: string) => void
+  onConnectionFailed?: () => void
 }
 
-const RTC_CONFIG: RTCConfiguration = {
-  iceServers: [
+function buildRtcConfig(): RTCConfiguration {
+  const iceServers: RTCIceServer[] = [
     { urls: 'stun:stun.l.google.com:19302' },
     { urls: 'stun:stun1.l.google.com:19302' },
     { urls: 'stun:stun2.l.google.com:19302' },
-  ],
+  ]
+
+  // TURN 서버 환경변수 설정 시 relay fallback 추가 (회사 방화벽 환경 대응)
+  const turnUrl = process.env.NEXT_PUBLIC_TURN_URL
+  const turnUsername = process.env.NEXT_PUBLIC_TURN_USERNAME
+  const turnCredential = process.env.NEXT_PUBLIC_TURN_CREDENTIAL
+
+  if (turnUrl) {
+    iceServers.push({
+      urls: turnUrl,
+      username: turnUsername ?? '',
+      credential: turnCredential ?? '',
+    })
+  }
+
+  return { iceServers }
 }
+
+const RTC_CONFIG = buildRtcConfig()
 
 interface PeerConn {
   pc: RTCPeerConnection
@@ -48,19 +71,23 @@ export function useWebRTC({
   onMessage,
   onPeerConnected,
   onPeerDisconnected,
+  onConnectionFailed,
 }: UseWebRTCOptions): {
   broadcast: (msg: DataMessage) => void
   sendToPeer: (peerId: string, msg: DataMessage) => void
 } {
   const peersRef = useRef<Map<string, PeerConn>>(new Map())
+  const iceTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
   const onMessageRef = useRef(onMessage)
   const onPeerConnectedRef = useRef(onPeerConnected)
   const onPeerDisconnectedRef = useRef(onPeerDisconnected)
+  const onConnectionFailedRef = useRef(onConnectionFailed)
 
   // 최신 콜백 참조 유지
   useEffect(() => { onMessageRef.current = onMessage }, [onMessage])
   useEffect(() => { onPeerConnectedRef.current = onPeerConnected }, [onPeerConnected])
   useEffect(() => { onPeerDisconnectedRef.current = onPeerDisconnected }, [onPeerDisconnected])
+  useEffect(() => { onConnectionFailedRef.current = onConnectionFailed }, [onConnectionFailed])
 
   const sendSignal = useCallback(
     (type: string, to: string | undefined, payload: unknown) => {
@@ -136,12 +163,54 @@ export function useWebRTC({
         }
       }
 
+      // ICE 연결 타임아웃: checking 상태가 장시간 지속되면 ICE restart → 재시도 후 실패 처리
+      const clearIceTimer = () => {
+        const timer = iceTimersRef.current.get(peerId)
+        if (timer) {
+          clearTimeout(timer)
+          iceTimersRef.current.delete(peerId)
+        }
+      }
+
+      let iceRestarted = false
+
+      const startIceTimer = (timeoutMs: number) => {
+        clearIceTimer()
+        iceTimersRef.current.set(peerId, setTimeout(() => {
+          // 타임아웃 시점에 아직 연결되지 않았으면
+          if (pc.iceConnectionState === 'checking' || pc.iceConnectionState === 'new') {
+            if (!iceRestarted) {
+              // 첫 번째 타임아웃: ICE restart 시도
+              iceRestarted = true
+              try {
+                pc.restartIce()
+              } catch {
+                // restartIce not supported
+              }
+              startIceTimer(ICE_RESTART_TIMEOUT_MS)
+            } else {
+              // ICE restart 후에도 연결 실패 → 정리
+              pc.close()
+              peersRef.current.delete(peerId)
+              onPeerDisconnectedRef.current(peerId)
+              onConnectionFailedRef.current?.()
+            }
+          }
+        }, timeoutMs))
+      }
+
+      // 피어 연결 생성 시 타이머 시작
+      startIceTimer(ICE_TIMEOUT_MS)
+
       pc.onconnectionstatechange = () => {
-        if (
+        if (pc.connectionState === 'connected') {
+          clearIceTimer()
+        } else if (
           pc.connectionState === 'disconnected' ||
           pc.connectionState === 'failed' ||
           pc.connectionState === 'closed'
         ) {
+          clearIceTimer()
           peersRef.current.delete(peerId)
           onPeerDisconnectedRef.current(peerId)
         }
@@ -149,7 +218,10 @@ export function useWebRTC({
 
       // iceConnectionState: connectionState보다 빠르게 실패 감지
       pc.oniceconnectionstatechange = () => {
-        if (pc.iceConnectionState === 'failed') {
+        if (pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') {
+          clearIceTimer()
+        } else if (pc.iceConnectionState === 'failed') {
+          clearIceTimer()
           pc.close()
           peersRef.current.delete(peerId)
           onPeerDisconnectedRef.current(peerId)
@@ -285,12 +357,20 @@ export function useWebRTC({
       onPeerDisconnectedRef.current(peerId)
     })
 
+    const peers = peersRef.current
+    const iceTimers = iceTimersRef.current
+
     return () => {
       eventSource.close()
-      for (const { pc } of peersRef.current.values()) {
+      for (const { pc } of peers.values()) {
         pc.close()
       }
-      peersRef.current.clear()
+      peers.clear()
+      // ICE 타이머 정리
+      for (const timer of iceTimers.values()) {
+        clearTimeout(timer)
+      }
+      iceTimers.clear()
     }
   }, [enabled, roomId, myId, myName, createPeerConnection, sendSignal])
 
