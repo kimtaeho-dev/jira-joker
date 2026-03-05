@@ -48,7 +48,9 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
   const [panelOpen, setPanelOpen] = useState(true)
 
   const myVoteRef = useRef(myVote)
-  useEffect(() => { myVoteRef.current = myVote }, [myVote])
+  useEffect(() => {
+    myVoteRef.current = myVote
+  }, [myVote])
 
   const hostId = usePokerStore((s) => s.hostId)
 
@@ -93,20 +95,20 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
       try {
         navigator.sendBeacon(
           `/api/signaling/${storeRoomId}`,
-          new Blob([JSON.stringify({ from: myId, type: 'leave' })], { type: 'application/json' })
+          new Blob([JSON.stringify({ from: myId, type: 'leave' })], { type: 'application/json' }),
         )
       } catch {}
       // DataChannel로도 즉시 알림 (best-effort)
-      try { broadcastRef.current({ type: 'leaving', peerId: myId }) } catch {}
+      try {
+        broadcastRef.current({ type: 'leaving', peerId: myId })
+      } catch {}
     }
     window.addEventListener('beforeunload', handler)
     return () => window.removeEventListener('beforeunload', handler)
   }, [myId, storeRoomId, isHost])
 
   const isAllVoted =
-    phase === 'voting' &&
-    participants.length >= 2 &&
-    participants.every((p) => p.hasVoted)
+    phase === 'voting' && participants.length >= 2 && participants.every((p) => p.hasVoted)
   const [countdown, setCountdown] = useState<number | null>(null)
 
   // broadcast ref: WebRTC 초기화 전에도 안전하게 참조할 수 있도록
@@ -174,13 +176,25 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
         }
       }
     },
-    [setParticipantVoted, setParticipantVote, resetRound, nextTicket, applySyncState, removeParticipant, migrateHost],
+    [
+      setParticipantVoted,
+      setParticipantVote,
+      resetRound,
+      nextTicket,
+      applySyncState,
+      removeParticipant,
+      migrateHost,
+    ],
   )
 
   const departedHostNameRef = useRef(departedHostName)
-  useEffect(() => { departedHostNameRef.current = departedHostName }, [departedHostName])
+  useEffect(() => {
+    departedHostNameRef.current = departedHostName
+  }, [departedHostName])
   const hostWaitingRef = useRef(hostWaiting)
-  useEffect(() => { hostWaitingRef.current = hostWaiting }, [hostWaiting])
+  useEffect(() => {
+    hostWaitingRef.current = hostWaiting
+  }, [hostWaiting])
 
   const { broadcast, sendToPeer } = useWebRTC({
     roomId,
@@ -191,7 +205,11 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
     onPeerConnected: (peerId, name) => {
       addParticipant({ id: peerId, name, hasVoted: false })
       // 호스트 대기 중 → 이름 매칭으로 호스트 복원
-      if (hostWaitingRef.current && departedHostNameRef.current && name === departedHostNameRef.current) {
+      if (
+        hostWaitingRef.current &&
+        departedHostNameRef.current &&
+        name === departedHostNameRef.current
+      ) {
         migrateHost(peerId)
         setHostWaiting(false)
         setDepartedHostName(null)
@@ -216,8 +234,12 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
   })
 
   // broadcast/sendToPeer ref 업데이트
-  useEffect(() => { broadcastRef.current = broadcast }, [broadcast])
-  useEffect(() => { sendToPeerRef.current = sendToPeer }, [sendToPeer])
+  useEffect(() => {
+    broadcastRef.current = broadcast
+  }, [broadcast])
+  useEffect(() => {
+    sendToPeerRef.current = sendToPeer
+  }, [sendToPeer])
 
   // Effect 1: 카운트다운 타이머만 관리
   useEffect(() => {
@@ -265,17 +287,22 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
     broadcastRef.current({ type: 'next' })
   }, [nextTicket])
 
-  const handleKick = useCallback((targetId: string) => {
-    broadcastRef.current({ type: 'kick', targetId })
-    removeParticipant(targetId)
-  }, [removeParticipant])
+  const handleKick = useCallback(
+    (targetId: string) => {
+      broadcastRef.current({ type: 'kick', targetId })
+      removeParticipant(targetId)
+    },
+    [removeParticipant],
+  )
 
   const handleLeaveRoom = useCallback(() => {
     if (isHost()) {
       if (!window.confirm('방을 종료하시겠습니까?\n모든 참가자의 연결이 끊어집니다.')) return
       broadcastRef.current({ type: 'room_closed' })
     } else {
-      try { broadcastRef.current({ type: 'leaving', peerId: myId }) } catch {}
+      try {
+        broadcastRef.current({ type: 'leaving', peerId: myId })
+      } catch {}
     }
     leaveRoom()
     router.push('/')
@@ -352,7 +379,10 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
   // disconnectReason overlay (호스트 이탈 / 추방)
   if (disconnectReason) {
     const title = disconnectReason === 'host_left' ? '방이 종료되었습니다' : '방에서 추방되었습니다'
-    const desc = disconnectReason === 'host_left' ? '호스트가 방을 나갔습니다.' : '호스트에 의해 추방되었습니다.'
+    const desc =
+      disconnectReason === 'host_left'
+        ? '호스트가 방을 나갔습니다.'
+        : '호스트에 의해 추방되었습니다.'
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
         <div className="mx-4 w-full max-w-sm rounded-2xl bg-white p-8 text-center shadow-xl">
@@ -409,7 +439,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
               <p className="mt-2 text-gray-500">곧 게임이 시작됩니다</p>
             </div>
             <div className="h-10 w-10 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600" />
-            <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-mono text-gray-500">
+            <span className="rounded-full bg-gray-100 px-3 py-1 font-mono text-xs text-gray-500">
               Room: {roomId.slice(0, 8)}…
             </span>
           </>
@@ -456,7 +486,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
 
           {/* Center: Room ID + Copy */}
           <div className="hidden items-center gap-2 sm:flex">
-            <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-mono text-gray-500">
+            <span className="rounded-full bg-gray-100 px-3 py-1 font-mono text-xs text-gray-500">
               {roomId.slice(0, 8)}…
             </span>
             <button
@@ -480,7 +510,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
               className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
                 isHost()
                   ? 'bg-red-500 text-white hover:bg-red-600'
-                  : 'border border-gray-200 text-red-500 hover:bg-red-50 hover:border-red-200'
+                  : 'border border-gray-200 text-red-500 hover:border-red-200 hover:bg-red-50'
               }`}
             >
               {isHost() ? '방 종료' : '나가기'}
@@ -490,7 +520,9 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
       </header>
 
       {/* Main: Poker Table (center) */}
-      <main className={`flex flex-1 items-center justify-center px-4 transition-[padding] duration-300 ${panelOpen ? 'lg:pr-96' : ''}`}>
+      <main
+        className={`flex flex-1 items-center justify-center px-4 transition-[padding] duration-300 ${panelOpen ? 'lg:pr-96' : ''}`}
+      >
         <PokerTable
           myId={myId}
           countdown={countdown}
@@ -502,7 +534,9 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
 
       {/* Bottom: Card Deck (sticky) */}
       {ticket && (
-        <div className={`sticky bottom-0 z-30 border-t border-gray-200 bg-white/95 px-4 py-3 backdrop-blur transition-[padding] duration-300 ${panelOpen ? 'lg:pr-96' : ''}`}>
+        <div
+          className={`sticky bottom-0 z-30 border-t border-gray-200 bg-white/95 px-4 py-3 backdrop-blur transition-[padding] duration-300 ${panelOpen ? 'lg:pr-96' : ''}`}
+        >
           <CardDeck onSelectCard={handleSelectCard} compact />
         </div>
       )}

@@ -40,10 +40,21 @@ npm run lint     # ESLint
 - Signaling is required to exchange SDP offers/answers before P2P is established
 - STUN 서버 다중화 (`stun.l.google.com`, `stun1`, `stun2`) — 방화벽 환경 fallback
 - ICE candidate 배치 전송 (100ms 윈도우) — 시그널링 왕복 횟수 절감
+- ICE candidate 버퍼링: `setRemoteDescription` 완료 전 수신된 candidates를 큐에 보관, 완료 후 일괄 적용 (race condition 방지)
 - `iceConnectionState` 감시로 피어 이탈 빠른 감지; SSE heartbeat 15초 주기
 - During voting: only **vote completion status** is broadcast (actual card value stays local)
 - After all participants vote: 2-second countdown, then actual values sync over DataChannels
 - **DataMessage types:** `voted`, `reveal`, `reset`, `next`, `sync_request`, `sync_response`, `room_closed`, `kick`, `host_migrated`, `leaving`
+
+### Server Relay Fallback
+
+- WebRTC P2P 연결 실패 시 (Zscaler, Symmetric NAT 등 기업 보안 환경) 자동으로 **서버 릴레이 모드**로 전환
+- 8초 타임아웃: 첫 피어 발견 후 8초 내 DataChannel이 열리지 않으면 릴레이 모드 활성화
+- 릴레이 전송: `POST /api/signaling/[roomId]` (type: `relay`) → SSE `relay` 이벤트로 브로드캐스트
+- 기존 시그널링 인프라 재사용 — 추가 서버 불필요
+- `broadcast`/`sendToPeer` API 동일 — 호출측 코드 변경 없이 투명하게 동작
+- `transportMode` 상태 (`connecting` | `p2p` | `relay`) 노출 → PokerTable에 "서버 중계 모드" 배지 표시
+- Planning Poker는 초경량 텍스트 교환이므로 릴레이 성능 저하 무시 가능
 
 ### Room Management
 

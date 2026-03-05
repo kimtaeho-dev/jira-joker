@@ -77,10 +77,7 @@ export async function GET(req: NextRequest) {
       const typeName = (data.fields?.issuetype?.name ?? '').toLowerCase()
       const hierarchyLevel = data.fields?.issuetype?.hierarchyLevel
       const isEpic =
-        hierarchyLevel === 1 ||
-        typeName === 'epic' ||
-        typeName === '에픽' ||
-        typeName === '큰틀'
+        hierarchyLevel === 1 || typeName === 'epic' || typeName === '에픽' || typeName === '큰틀'
       if (!isEpic) {
         return NextResponse.json(
           {
@@ -98,25 +95,35 @@ export async function GET(req: NextRequest) {
       if (!epicKey) {
         return NextResponse.json({ error: 'epicKey is required' }, { status: 400 })
       }
-      const url = email ? `${apiBase}/search/jql` : `${apiBase}/search`
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { ...headers, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          jql: `parent = ${epicKey} ORDER BY created DESC`,
-          fields: [
-            'summary',
-            'key',
-            'customfield_10016',
-            'description',
-            'assignee',
-            'reporter',
-            'duedate',
-            'priority',
-          ],
-          maxResults: 100,
-        }),
-      })
+
+      const jql = encodeURIComponent(
+        `"Epic Link" = ${epicKey} AND issuetype in (Story, Task, Bug) ORDER BY created DESC`,
+      )
+      const url = email
+        ? `${apiBase}/search/jql`
+        : `${apiBase}/search?jql=${jql}&fields=summary,key,customfield_10016&maxResults=100`
+
+      const res = email
+        ? await fetch(url, {
+            method: 'POST',
+            headers: { ...headers, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              jql: `parent = ${epicKey} ORDER BY created DESC`,
+              fields: [
+                'summary',
+                'key',
+                'customfield_10016',
+                'description',
+                'assignee',
+                'reporter',
+                'duedate',
+                'priority',
+              ],
+              maxResults: 100,
+            }),
+          })
+        : await fetch(url, { headers })
+
       if (!res.ok) {
         const body = await res.text()
         return NextResponse.json(
