@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
+import { Logo } from '@/components/Logo'
 import { JiraConfig, JiraTicket,usePokerStore } from '@/store/usePokerStore'
 
 interface JiraEpic {
@@ -161,12 +162,12 @@ export function CreateRoomWizard() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 px-4">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
       <div className="w-full max-w-md">
         {/* Header */}
-        <div className="mb-8 text-center">
-          <h1 className="text-4xl font-bold tracking-tight text-gray-900">Jira Joker</h1>
-          <p className="mt-2 text-sm text-gray-500">Real-time Planning Poker via WebRTC P2P</p>
+        <div className="mb-8 flex flex-col items-center">
+          <Logo size="lg" />
+          <p className="mt-3 text-sm text-text-secondary">Real-time Planning Poker via WebRTC P2P</p>
         </div>
 
         {/* Step indicator */}
@@ -174,42 +175,42 @@ export function CreateRoomWizard() {
           {([1, 2, 3] as Step[]).map((s) => (
             <div key={s} className="flex items-center gap-2">
               <div
-                className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold ${
+                className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold transition-all duration-200 ${
                   step === s
-                    ? 'bg-blue-600 text-white'
+                    ? 'bg-primary text-white shadow-sm shadow-primary/30'
                     : step > s
-                      ? 'bg-blue-200 text-blue-700'
-                      : 'bg-gray-200 text-gray-500'
+                      ? 'bg-primary-light text-primary'
+                      : 'bg-slate-100 text-text-muted'
                 }`}
               >
-                {s}
+                {step > s ? '✓' : s}
               </div>
-              {s < 3 && <div className={`h-px w-8 ${step > s ? 'bg-blue-300' : 'bg-gray-200'}`} />}
+              {s < 3 && <div className={`h-px w-8 transition-colors ${step > s ? 'bg-primary/40' : 'bg-slate-200'}`} />}
             </div>
           ))}
         </div>
 
         {/* Card */}
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="rounded-2xl border border-slate-200/60 bg-white/80 p-6 shadow-sm backdrop-blur-sm">
           {/* Step 1 */}
           {step === 1 && (
             <div className="space-y-4">
               <div>
-                <h2 className="text-lg font-semibold text-gray-900">Jira 연동</h2>
-                <p className="mt-1 text-sm text-gray-500">
+                <h2 className="text-lg font-semibold text-text-primary">Jira 연동</h2>
+                <p className="mt-1 text-sm text-text-secondary">
                   인증 방식을 선택하고 정보를 입력해주세요.
                 </p>
               </div>
 
               {/* Cloud / Server toggle */}
-              <div className="flex rounded-xl border border-gray-200 p-1">
+              <div className="flex rounded-xl border border-slate-200 p-1">
                 <button
                   type="button"
                   onClick={() => setAuthMode('cloud')}
                   className={`flex-1 rounded-lg py-1.5 text-xs font-semibold transition-colors ${
                     authMode === 'cloud'
-                      ? 'bg-blue-600 text-white shadow-sm'
-                      : 'text-gray-500 hover:text-gray-700'
+                      ? 'bg-primary text-white shadow-sm'
+                      : 'text-text-secondary hover:text-text-primary'
                   }`}
                 >
                   Cloud
@@ -219,8 +220,8 @@ export function CreateRoomWizard() {
                   onClick={() => setAuthMode('server')}
                   className={`flex-1 rounded-lg py-1.5 text-xs font-semibold transition-colors ${
                     authMode === 'server'
-                      ? 'bg-blue-600 text-white shadow-sm'
-                      : 'text-gray-500 hover:text-gray-700'
+                      ? 'bg-primary text-white shadow-sm'
+                      : 'text-text-secondary hover:text-text-primary'
                   }`}
                 >
                   Server · DC
@@ -229,7 +230,7 @@ export function CreateRoomWizard() {
 
               <div className="space-y-3">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-gray-700">
+                  <label className="mb-1 block text-xs font-medium text-text-secondary">
                     {authMode === 'cloud' ? 'Jira Domain' : 'Jira Base URL'}
                   </label>
                   <input
@@ -241,12 +242,12 @@ export function CreateRoomWizard() {
                         ? 'your-org.atlassian.net'
                         : 'https://jira.your-company.com'
                     }
-                    className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-text-primary placeholder:text-text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none"
                   />
                 </div>
                 {authMode === 'cloud' && (
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-gray-700">
+                    <label className="mb-1 block text-xs font-medium text-text-secondary">
                       Jira Account Email
                     </label>
                     <input
@@ -254,12 +255,12 @@ export function CreateRoomWizard() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="you@example.com"
-                      className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-text-primary placeholder:text-text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none"
                     />
                   </div>
                 )}
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-gray-700">
+                  <label className="mb-1 block text-xs font-medium text-text-secondary">
                     {authMode === 'cloud' ? 'API Token' : 'Personal Access Token'}
                   </label>
                   <input
@@ -268,15 +269,15 @@ export function CreateRoomWizard() {
                     onChange={(e) => setToken(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleStep1Next()}
                     placeholder="토큰을 입력하세요"
-                    className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-text-primary placeholder:text-text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none"
                   />
                 </div>
               </div>
-              {error && <p className="text-sm text-red-600">{error}</p>}
+              {error && <p className="text-sm text-danger">{error}</p>}
               <button
                 onClick={handleStep1Next}
                 disabled={loading}
-                className="w-full rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className="w-full rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-primary/20 transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {loading ? '인증 확인 중...' : '다음'}
               </button>
@@ -291,7 +292,7 @@ export function CreateRoomWizard() {
                     setAuthMode('cloud')
                     setHasSavedCreds(false)
                   }}
-                  className="w-full text-center text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                  className="w-full text-center text-xs text-text-muted hover:text-text-secondary transition-colors"
                 >
                   저장된 인증 정보 삭제
                 </button>
@@ -303,8 +304,8 @@ export function CreateRoomWizard() {
           {step === 2 && (
             <div className="space-y-4">
               <div>
-                <h2 className="text-lg font-semibold text-gray-900">닉네임 설정</h2>
-                <p className="mt-1 text-sm text-gray-500">
+                <h2 className="text-lg font-semibold text-text-primary">닉네임 설정</h2>
+                <p className="mt-1 text-sm text-text-secondary">
                   Planning Poker에서 사용할 이름을 입력해주세요.
                 </p>
               </div>
@@ -315,19 +316,19 @@ export function CreateRoomWizard() {
                 onKeyDown={(e) => e.key === 'Enter' && handleStep2Next()}
                 placeholder="홍길동"
                 autoFocus
-                className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-text-primary placeholder:text-text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none"
               />
-              {error && <p className="text-sm text-red-600">{error}</p>}
+              {error && <p className="text-sm text-danger">{error}</p>}
               <div className="flex gap-2">
                 <button
                   onClick={() => setStep(1)}
-                  className="rounded-xl border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                  className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
                 >
                   이전
                 </button>
                 <button
                   onClick={handleStep2Next}
-                  className="flex-1 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700"
+                  className="flex-1 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-primary/20 transition-colors hover:bg-primary-hover"
                 >
                   다음
                 </button>
@@ -339,8 +340,8 @@ export function CreateRoomWizard() {
           {step === 3 && (
             <div className="space-y-4">
               <div>
-                <h2 className="text-lg font-semibold text-gray-900">Epic 지정</h2>
-                <p className="mt-1 text-sm text-gray-500">
+                <h2 className="text-lg font-semibold text-text-primary">Epic 지정</h2>
+                <p className="mt-1 text-sm text-text-secondary">
                   Planning Poker 대상 Epic ID를 입력해주세요.
                 </p>
               </div>
@@ -354,12 +355,12 @@ export function CreateRoomWizard() {
                   onKeyDown={(e) => e.key === 'Enter' && handleSearchEpic()}
                   placeholder="PROJ-42"
                   autoFocus
-                  className="flex-1 rounded-xl border border-gray-300 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-text-primary placeholder:text-text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none"
                 />
                 <button
                   onClick={handleSearchEpic}
                   disabled={!epicKeyInput.trim() || searchingEpic}
-                  className="rounded-xl bg-gray-800 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-xl bg-slate-800 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {searchingEpic ? '검색 중...' : '검색'}
                 </button>
@@ -368,33 +369,33 @@ export function CreateRoomWizard() {
               {/* 에러 */}
               {epicError && (
                 <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3">
-                  <p className="text-sm text-red-600">{epicError}</p>
+                  <p className="text-sm text-danger">{epicError}</p>
                 </div>
               )}
 
               {/* Epic 미리보기 */}
               {foundEpic && (
-                <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
-                  <p className="text-xs font-medium text-blue-500">Epic 확인</p>
-                  <p className="mt-0.5 text-sm font-semibold text-gray-900">
-                    <span className="text-blue-600">{foundEpic.key}</span> {foundEpic.summary}
+                <div className="rounded-xl border border-indigo-200 bg-primary-soft px-4 py-3">
+                  <p className="text-xs font-medium text-primary">Epic 확인</p>
+                  <p className="mt-0.5 text-sm font-semibold text-text-primary">
+                    <span className="text-primary">{foundEpic.key}</span> {foundEpic.summary}
                   </p>
-                  <div className="mt-2 border-t border-blue-200 pt-2">
+                  <div className="mt-2 border-t border-indigo-200 pt-2">
                     {tickets.length === 0 ? (
-                      <p className="text-xs text-gray-400">하위 Task가 없습니다.</p>
+                      <p className="text-xs text-text-muted">하위 Task가 없습니다.</p>
                     ) : (
                       <>
-                        <p className="mb-1.5 text-xs font-medium text-gray-500">
+                        <p className="mb-1.5 text-xs font-medium text-text-secondary">
                           하위 Task {tickets.length}건
                         </p>
                         <ul className="space-y-1">
                           {tickets.slice(0, 5).map((t) => (
-                            <li key={t.id} className="text-xs text-gray-700">
-                              <span className="font-medium text-blue-600">{t.key}</span> {t.summary}
+                            <li key={t.id} className="text-xs text-slate-700">
+                              <span className="font-medium text-primary">{t.key}</span> {t.summary}
                             </li>
                           ))}
                           {tickets.length > 5 && (
-                            <li className="text-xs text-gray-400">외 {tickets.length - 5}건</li>
+                            <li className="text-xs text-text-muted">외 {tickets.length - 5}건</li>
                           )}
                         </ul>
                       </>
@@ -406,14 +407,14 @@ export function CreateRoomWizard() {
               <div className="flex gap-2">
                 <button
                   onClick={() => setStep(2)}
-                  className="rounded-xl border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                  className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
                 >
                   이전
                 </button>
                 <button
                   onClick={handleCreateRoom}
                   disabled={!foundEpic || tickets.length === 0}
-                  className="flex-1 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex-1 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-primary/20 transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   방 만들기
                 </button>

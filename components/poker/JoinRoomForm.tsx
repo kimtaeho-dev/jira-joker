@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 
+import { Logo } from '@/components/Logo'
 import { usePokerStore } from '@/store/usePokerStore'
 
 interface JoinRoomFormProps {
@@ -44,22 +45,22 @@ export function JoinRoomForm({ roomId }: JoinRoomFormProps) {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 px-4">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm space-y-6">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">Join Room</h1>
-          <p className="mt-2 text-sm text-gray-500">Enter your name to join the planning session</p>
+        <div className="flex flex-col items-center">
+          <Logo size="md" />
+          <p className="mt-3 text-sm text-text-secondary">Enter your name to join the planning session</p>
         </div>
 
-        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-          <p className="text-xs font-medium tracking-wide text-gray-500 uppercase">Room Link</p>
+        <div className="rounded-2xl border border-slate-200/60 bg-white/80 p-4 shadow-sm backdrop-blur-sm">
+          <p className="text-xs font-medium tracking-wide text-text-secondary uppercase">Room Link</p>
           <div className="mt-2 flex items-center gap-2">
-            <span className="flex-1 truncate rounded-lg bg-gray-50 px-3 py-2 text-sm text-gray-700">
+            <span className="flex-1 truncate rounded-xl bg-surface-secondary px-3 py-2 text-sm text-slate-700">
               {roomUrl}
             </span>
             <button
               onClick={handleCopy}
-              className="shrink-0 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+              className="shrink-0 rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
             >
               {copied ? 'Copied!' : 'Copy'}
             </button>
@@ -74,12 +75,12 @@ export function JoinRoomForm({ roomId }: JoinRoomFormProps) {
             onKeyDown={(e) => e.key === 'Enter' && handleJoin()}
             placeholder="Your name"
             autoFocus
-            className="w-full rounded-xl border border-gray-300 px-4 py-3 text-base text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-base text-text-primary placeholder:text-text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none"
           />
           <button
             onClick={handleJoin}
             disabled={!name.trim()}
-            className="w-full rounded-xl bg-blue-600 px-8 py-3 text-base font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="w-full rounded-xl bg-primary px-8 py-3 text-base font-semibold text-white shadow-sm shadow-primary/20 transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
           >
             참여하기
           </button>

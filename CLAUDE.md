@@ -11,7 +11,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Framework:** Next.js (App Router)
 - **Real-time:** WebRTC (DataChannel for P2P mesh sync)
 - **Jira Integration:** Jira REST API via API Token
-- **Styling:** Tailwind CSS + shadcn/ui
+- **Styling:** Tailwind CSS + custom design system (Modern Minimal)
+- **Fonts:** Geist (body) + Plus Jakarta Sans (display/headings)
 - **State Management:** Zustand (client-side only)
 
 ## Commands
@@ -73,11 +74,24 @@ npm run lint     # ESLint
 - Tracks: current ticket, participant list, vote status per peer, revealed values
 - Results computed from synced values: Mode (most common) and Average
 
+### Design System
+
+- **Color tokens:** CSS custom properties in `globals.css` → `@theme inline` 등록 → `bg-primary`, `text-text-secondary` 등으로 사용
+  - Primary: indigo-600 (`--primary: #4f46e5`), Accent: emerald-500, Danger: red-500
+  - Surface: white/slate 계열, Border: slate-200/60 (subtle)
+- **Typography:** `--font-display` (Plus Jakarta Sans) for headings/logo, `--font-sans` (Geist) for body
+- **Logo:** `components/Logo.tsx` — SVG spade(♠) icon + "J" + "Jira Joker" wordmark. Props: `size` (sm/md/lg), `showText`
+- **Card/Box 공통:** `rounded-2xl border border-slate-200/60 bg-white/80 backdrop-blur-sm shadow-sm`
+- **Button styles:** Primary (`bg-primary shadow-primary/20`), Secondary (`border-slate-200`), Danger (`bg-danger`), Ghost (`text-slate-500 hover:bg-slate-50`). 모두 `rounded-xl`
+- **Input styles:** `rounded-xl border-slate-200 focus:border-primary focus:ring-primary/20`
+- **Glassmorphism:** Header/Panel/Overlay에 `bg-white/80 backdrop-blur-md` 적용
+
 ### UI Layout
 
-- **Poker Table (center):** Participants arranged on an ellipse around a blue table surface (`from-blue-600 to-blue-700`). "Me" always at bottom center, others clockwise. Table center shows voting status / countdown / results with host controls. Host marked with ★ badge.
-- **Ticket Panel (right float):** Fixed right-side panel (w-96) with toggle button. Contains simplified TicketDetail (key + progress + summary + description) and TicketHistory. Slides in/out. 패널 열림/닫힘 시 메인 콘텐츠에 `lg:pr-96` 적용하여 포커 테이블·카드덱 동적 중앙 정렬.
+- **Poker Table (center):** Participants arranged on an ellipse around an indigo-violet gradient table surface (`from-indigo-600 to-violet-600`). "Me" always at bottom center, others clockwise. Table center shows voting status / countdown / results with host controls. Host marked with ★ badge (amber-400).
+- **Ticket Panel (right float):** Fixed right-side panel (w-96) with toggle button. Contains simplified TicketDetail (key + progress + summary + description) and TicketHistory. Slides in/out. 패널 열림/닫힘 시 메인 콘텐츠에 `lg:pr-96` 적용하여 포커 테이블·카드덱 동적 중앙 정렬. Glassmorphism: `bg-white/90 backdrop-blur-md`.
 - **Card Deck (sticky bottom):** Fibonacci cards fixed at bottom of viewport. Only shown when a ticket is active.
+- **Header:** `bg-white/80 backdrop-blur-md border-slate-200/60` with Logo component.
 
 ### Card Deck
 
@@ -97,3 +111,4 @@ All core steps are complete:
 8. Session summary screen (completed tickets table + total SP)
 9. Floating ticket panel (right-side slide panel with toggle, TicketDetail + TicketHistory)
 10. Sticky bottom card deck
+11. Design system overhaul (Modern Minimal: indigo primary, Plus Jakarta Sans, glassmorphism, SVG logo)

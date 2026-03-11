@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { use, useCallback, useEffect, useRef, useState } from 'react'
 
+import { Logo } from '@/components/Logo'
 import { CardDeck } from '@/components/poker/CardDeck'
 import { JoinRoomForm } from '@/components/poker/JoinRoomForm'
 import { PokerTable } from '@/components/poker/PokerTable'
@@ -321,8 +322,8 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
 
   if (!hydrated) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <div className="animate-pulse text-gray-400">Loading...</div>
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="animate-pulse text-text-muted">Loading...</div>
       </div>
     )
   }
@@ -330,21 +331,21 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
   if (!myName || storeRoomId !== roomId) {
     if (roomValid === null) {
       return (
-        <div className="flex min-h-screen items-center justify-center bg-gray-50">
-          <div className="animate-pulse text-gray-400">Loading...</div>
+        <div className="flex min-h-screen items-center justify-center bg-background">
+          <div className="animate-pulse text-text-muted">Loading...</div>
         </div>
       )
     }
     if (roomValid === false) {
       return (
-        <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-gray-50 px-6">
+        <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-background px-6">
           <div className="text-center">
-            <h2 className="text-2xl font-bold text-gray-900">방을 찾을 수 없습니다</h2>
-            <p className="mt-2 text-gray-500">존재하지 않거나 이미 종료된 방입니다.</p>
+            <h2 className="font-display text-2xl font-bold text-text-primary">방을 찾을 수 없습니다</h2>
+            <p className="mt-2 text-text-secondary">존재하지 않거나 이미 종료된 방입니다.</p>
           </div>
           <a
             href="/"
-            className="rounded-lg bg-gray-900 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-gray-700"
+            className="rounded-xl bg-primary px-6 py-2.5 text-sm font-medium text-white shadow-sm shadow-primary/20 transition-colors hover:bg-primary-hover"
           >
             홈으로 돌아가기
           </a>
@@ -357,17 +358,17 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
   // 호스트 재접속 대기 오버레이
   if (hostWaiting) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-        <div className="mx-4 w-full max-w-sm rounded-2xl bg-white p-8 text-center shadow-xl">
-          <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600" />
-          <h2 className="text-xl font-bold text-gray-900">호스트 재접속 대기 중...</h2>
-          <p className="mt-2 text-sm text-gray-500">호스트가 돌아오면 자동으로 복원됩니다</p>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+        <div className="mx-4 w-full max-w-sm rounded-2xl border border-slate-200/60 bg-white/90 p-8 text-center shadow-xl backdrop-blur-md">
+          <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-primary" />
+          <h2 className="font-display text-xl font-bold text-text-primary">호스트 재접속 대기 중...</h2>
+          <p className="mt-2 text-sm text-text-secondary">호스트가 돌아오면 자동으로 복원됩니다</p>
           <button
             onClick={() => {
               leaveRoom()
               router.push('/')
             }}
-            className="mt-6 rounded-lg bg-gray-200 px-6 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-300"
+            className="mt-6 rounded-xl border border-slate-200 px-6 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
           >
             홈으로 돌아가기
           </button>
@@ -384,16 +385,16 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
         ? '호스트가 방을 나갔습니다.'
         : '호스트에 의해 추방되었습니다.'
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-        <div className="mx-4 w-full max-w-sm rounded-2xl bg-white p-8 text-center shadow-xl">
-          <h2 className="text-xl font-bold text-gray-900">{title}</h2>
-          <p className="mt-2 text-sm text-gray-500">{desc}</p>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+        <div className="mx-4 w-full max-w-sm rounded-2xl border border-slate-200/60 bg-white/90 p-8 text-center shadow-xl backdrop-blur-md">
+          <h2 className="font-display text-xl font-bold text-text-primary">{title}</h2>
+          <p className="mt-2 text-sm text-text-secondary">{desc}</p>
           <button
             onClick={() => {
               leaveRoom()
               router.push('/')
             }}
-            className="mt-6 rounded-lg bg-gray-900 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-gray-700"
+            className="mt-6 rounded-xl bg-primary px-6 py-2.5 text-sm font-medium text-white shadow-sm shadow-primary/20 transition-colors hover:bg-primary-hover"
           >
             홈으로 돌아가기
           </button>
@@ -407,25 +408,25 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
   // 2인 미만 대기 화면
   if (participants.length < 2) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-gray-50 px-6">
+      <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-background px-6">
         {isHost() ? (
           <>
             <div className="text-center">
-              <h2 className="text-2xl font-bold text-gray-900">게임 준비 중</h2>
-              <p className="mt-2 text-gray-500">다른 참가자를 기다리는 중입니다...</p>
+              <h2 className="font-display text-2xl font-bold text-text-primary">게임 준비 중</h2>
+              <p className="mt-2 text-text-secondary">다른 참가자를 기다리는 중입니다...</p>
             </div>
-            <div className="h-10 w-10 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600" />
-            <div className="flex w-full max-w-sm flex-col items-center gap-3 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-              <p className="text-sm font-medium text-gray-700">초대 링크를 공유하세요</p>
+            <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-primary" />
+            <div className="flex w-full max-w-sm flex-col items-center gap-3 rounded-2xl border border-slate-200/60 bg-white/80 p-6 shadow-sm backdrop-blur-sm">
+              <p className="text-sm font-medium text-text-secondary">초대 링크를 공유하세요</p>
               <div className="flex w-full items-center gap-2">
                 <input
                   readOnly
                   value={inviteUrl}
-                  className="min-w-0 flex-1 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-600 outline-none"
+                  className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-surface-secondary px-3 py-2 text-xs text-slate-600 outline-none"
                 />
                 <button
                   onClick={handleCopyInvite}
-                  className="shrink-0 rounded-lg bg-gray-900 px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-gray-700"
+                  className="shrink-0 rounded-xl bg-primary px-4 py-2 text-xs font-medium text-white shadow-sm shadow-primary/20 transition-colors hover:bg-primary-hover"
                 >
                   {copied ? '복사됨!' : '복사'}
                 </button>
@@ -435,11 +436,11 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
         ) : (
           <>
             <div className="text-center">
-              <h2 className="text-2xl font-bold text-gray-900">호스트와 연결 중...</h2>
-              <p className="mt-2 text-gray-500">곧 게임이 시작됩니다</p>
+              <h2 className="font-display text-2xl font-bold text-text-primary">호스트와 연결 중...</h2>
+              <p className="mt-2 text-text-secondary">곧 게임이 시작됩니다</p>
             </div>
-            <div className="h-10 w-10 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600" />
-            <span className="rounded-full bg-gray-100 px-3 py-1 font-mono text-xs text-gray-500">
+            <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-primary" />
+            <span className="rounded-full bg-surface-secondary px-3 py-1 font-mono text-xs text-text-muted">
               Room: {roomId.slice(0, 8)}…
             </span>
           </>
@@ -451,16 +452,16 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
   // 세션 완료 화면
   if (!ticket && tickets.length > 0) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <header className="border-b border-gray-200 bg-white px-6 py-3 shadow-sm">
+      <div className="min-h-screen bg-background">
+        <header className="border-b border-slate-200/60 bg-white/80 px-6 py-3 backdrop-blur-md">
           <div className="mx-auto flex max-w-6xl items-center justify-between">
-            <span className="text-xl font-bold text-gray-900">Jira Joker</span>
+            <Logo size="sm" />
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-600">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-light text-sm font-bold text-primary">
                   {myName?.[0]?.toUpperCase() ?? '?'}
                 </div>
-                <span className="hidden text-sm font-medium text-gray-700 sm:inline">{myName}</span>
+                <span className="hidden text-sm font-medium text-slate-700 sm:inline">{myName}</span>
               </div>
             </div>
           </div>
@@ -477,21 +478,21 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-gray-50">
+    <div className="flex min-h-screen flex-col bg-background">
       {/* Header */}
-      <header className="border-b border-gray-200 bg-white px-6 py-3 shadow-sm">
+      <header className="border-b border-slate-200/60 bg-white/80 px-6 py-3 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center justify-between">
-          {/* Left: Title */}
-          <span className="text-xl font-bold text-gray-900">Jira Joker</span>
+          {/* Left: Logo */}
+          <Logo size="sm" />
 
           {/* Center: Room ID + Copy */}
           <div className="hidden items-center gap-2 sm:flex">
-            <span className="rounded-full bg-gray-100 px-3 py-1 font-mono text-xs text-gray-500">
+            <span className="rounded-full bg-surface-secondary px-3 py-1 font-mono text-xs text-text-muted">
               {roomId.slice(0, 8)}…
             </span>
             <button
               onClick={handleCopyInvite}
-              className="rounded-lg border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-50"
+              className="rounded-xl border border-slate-200 px-2.5 py-1 text-xs font-medium text-text-secondary transition-colors hover:bg-slate-50"
             >
               {copied ? '복사됨!' : '링크 복사'}
             </button>
@@ -500,17 +501,17 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
           {/* Right: User profile + Leave */}
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-600">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-light text-sm font-bold text-primary">
                 {myName?.[0]?.toUpperCase() ?? '?'}
               </div>
-              <span className="hidden text-sm font-medium text-gray-700 sm:inline">{myName}</span>
+              <span className="hidden text-sm font-medium text-slate-700 sm:inline">{myName}</span>
             </div>
             <button
               onClick={handleLeaveRoom}
-              className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+              className={`rounded-xl px-3 py-1.5 text-xs font-medium transition-colors ${
                 isHost()
-                  ? 'bg-red-500 text-white hover:bg-red-600'
-                  : 'border border-gray-200 text-red-500 hover:border-red-200 hover:bg-red-50'
+                  ? 'bg-danger text-white hover:bg-danger-hover'
+                  : 'border border-slate-200 text-danger hover:border-red-200 hover:bg-red-50'
               }`}
             >
               {isHost() ? '방 종료' : '나가기'}
@@ -535,7 +536,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
       {/* Bottom: Card Deck (sticky) */}
       {ticket && (
         <div
-          className={`sticky bottom-0 z-30 border-t border-gray-200 bg-white/95 px-4 py-3 backdrop-blur transition-[padding] duration-300 ${panelOpen ? 'lg:pr-96' : ''}`}
+          className={`sticky bottom-0 z-30 border-t border-slate-200/60 bg-white/90 px-4 py-3 backdrop-blur-md transition-[padding] duration-300 ${panelOpen ? 'lg:pr-96' : ''}`}
         >
           <CardDeck onSelectCard={handleSelectCard} compact />
         </div>

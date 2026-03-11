@@ -22,10 +22,10 @@ export function PokerCard({
   const displayValue = isRevealed && vote !== undefined ? vote : value
 
   const stateClasses = isSelected
-    ? 'border-blue-600 bg-blue-600 text-white shadow-lg scale-110 cursor-default'
+    ? 'border-primary bg-primary text-white shadow-lg shadow-primary/25 scale-105 cursor-default'
     : disabled
-      ? 'border-gray-200 bg-white text-gray-300 cursor-not-allowed opacity-50'
-      : 'border-gray-200 bg-white text-gray-800 hover:border-blue-400 hover:shadow-md cursor-pointer'
+      ? 'border-slate-200 bg-white text-slate-300 cursor-not-allowed opacity-50'
+      : 'border-slate-200 bg-white text-slate-800 hover:shadow-lg hover:-translate-y-1 hover:border-primary/40 cursor-pointer'
 
   const sizeClasses = compact
     ? 'h-14 w-10 text-base sm:h-16 sm:w-12 sm:text-lg'
@@ -35,7 +35,7 @@ export function PokerCard({
     <button
       onClick={onClick}
       disabled={disabled || !onClick}
-      className={`flex flex-col items-center justify-center rounded-lg border-2 font-bold transition-all select-none ${sizeClasses} ${stateClasses}`}
+      className={`flex flex-col items-center justify-center rounded-xl border-2 font-bold transition-all duration-200 ease-out select-none ${sizeClasses} ${stateClasses}`}
     >
       {displayValue}
     </button>
