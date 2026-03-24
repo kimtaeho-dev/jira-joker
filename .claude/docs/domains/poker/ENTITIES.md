@@ -162,4 +162,4 @@
   - `connecting` → `relay`: 첫 피어 발견 후 8초 이내 DataChannel open 실패 시
   - (relay → p2p 역전이 없음: 릴레이 모드는 세션 내 불가역)
 - **관계**:
-  - TransportMode ⊂ useWebRTC 반환값: PokerTable에서 "서버 중계 모드" 배지 표시에 사용 [미확인: 현재 코드에서 transportMode를 PokerTable로 전달하는 연결은 미구현 상태]
+  - TransportMode ⊂ useWebRTC 반환값: 현재 코드에서 transportMode를 PokerTable로 전달하는 연결은 미구현 상태 (CLAUDE.md에 언급되어 있으나 실제 배지 표시 구현 없음)
