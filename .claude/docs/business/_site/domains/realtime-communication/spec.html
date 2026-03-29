@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>실시간 통신 기획서 — Jira Joker 비즈니스 지식</title>
+  <link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body>
+  <div class="layout">
+    <nav class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h1 class="sidebar-title">Jira Joker</h1>
+        <button class="theme-toggle" id="theme-toggle" aria-label="테마 전환">🌙</button>
+      </div>
+      <div class="search-box">
+        <input type="search" class="search-input" id="search-input" placeholder="검색..." aria-label="검색">
+        <div class="search-results" id="search-results"></div>
+      </div>
+      <ul class="nav-list">
+        <li class="nav-item">
+          <a href="../../index.html" class="nav-link">정책 카탈로그</a>
+        </li>
+        <li class="nav-item">
+          <a href="../../glossary.html" class="nav-link">전체 용어집</a>
+        </li>
+        <li class="nav-item nav-domain">
+          <button class="nav-domain-toggle" aria-expanded="false">Jira 연동</button>
+          <ul class="nav-sublist">
+            <li><a href="../../domains/jira-integration/policies.html" class="nav-link">정책서</a></li>
+            <li><a href="../../domains/jira-integration/spec.html" class="nav-link">기획서</a></li>
+            <li><a href="../../domains/jira-integration/glossary.html" class="nav-link">용어집</a></li>
+          </ul>
+        </li>
+        <li class="nav-item nav-domain">
+          <button class="nav-domain-toggle" aria-expanded="true">실시간 통신</button>
+          <ul class="nav-sublist">
+            <li><a href="../../domains/realtime-communication/policies.html" class="nav-link">정책서</a></li>
+            <li><a href="../../domains/realtime-communication/spec.html" class="nav-link active">기획서</a></li>
+            <li><a href="../../domains/realtime-communication/glossary.html" class="nav-link">용어집</a></li>
+          </ul>
+        </li>
+        <li class="nav-item nav-domain">
+          <button class="nav-domain-toggle" aria-expanded="false">포커 게임</button>
+          <ul class="nav-sublist">
+            <li><a href="../../domains/poker-game/policies.html" class="nav-link">정책서</a></li>
+            <li><a href="../../domains/poker-game/spec.html" class="nav-link">기획서</a></li>
+            <li><a href="../../domains/poker-game/glossary.html" class="nav-link">용어집</a></li>
+          </ul>
+        </li>
+      </ul>
+    </nav>
+    <button class="sidebar-toggle" id="sidebar-toggle" aria-label="메뉴 열기">☰</button>
+    <main class="content">
+      <nav class="breadcrumb" aria-label="현재 위치">
+        <a href="../../index.html" class="breadcrumb-item">홈</a>
+        <span class="breadcrumb-item">실시간 통신</span>
+        <span class="breadcrumb-item">기획서</span>
+      </nav>
+      <article class="page">
+        <h1 class="page-title">실시간 통신 — 기획서</h1>
+        <p class="page-meta">최종 갱신: 2026-03-29</p>
+
+        <div class="domain-overview">
+          <h2>도메인 개요</h2>
+          <p>같은 방에 있는 참가자들이 게임 메시지를 실시간으로 주고받을 수 있는 통신 인프라를 제공한다. 우선 참가자 간 직접 연결(P2P)을 시도하고, 실패하면 서버를 통한 중계(릴레이)로 자동 전환하여 어떤 네트워크 환경에서도 게임이 진행될 수 있도록 보장한다.</p>
+        </div>
+
+        <div class="spec-feature" id="feature-sse-connection">
+          <h2>실시간 채널 연결</h2>
+
+          <h3>이 기능은 무엇인가</h3>
+          <p>참가자가 방에 입장할 때 서버와의 실시간 통신 채널을 열어 방의 현재 상태를 파악하고, 이후 발생하는 이벤트(참가자 입장/퇴장, 메시지)를 실시간으로 수신하는 기능이다.</p>
+
+          <h3>사용자 시나리오</h3>
+          <ol class="scenario-steps">
+            <li>참가자가 방에 입장하면 시스템이 자동으로 서버와 실시간 채널을 연다</li>
+            <li>서버가 이미 방에 있는 참가자 목록을 즉시 전달한다</li>
+            <li>기존 참가자에게는 새 참가자가 들어왔다는 알림이 전달된다</li>
+            <li>서버는 연결이 끊기지 않도록 15초마다 빈 신호를 보낸다</li>
+          </ol>
+
+          <h3>왜 이렇게 동작하는가</h3>
+          <ul class="design-decisions">
+            <li><strong>즉시 목록 전달</strong>: 신규 참가자가 기존 참가자와 빠르게 P2P 연결을 시작할 수 있도록 한다</li>
+            <li><strong>15초 하트비트</strong>: 브라우저나 프록시가 유휴 연결을 강제 종료하는 것을 방지한다</li>
+          </ul>
+
+          <h3>주요 정책</h3>
+          <ul class="related-policies">
+            <li><a href="policies.html#POL-001" class="xref">POL-001</a>: 참가자 식별자와 이름 필수 제공</li>
+            <li><a href="policies.html#POL-002" class="xref">POL-002</a>: 입장 즉시 기존 참가자 목록 수신</li>
+            <li><a href="policies.html#POL-003" class="xref">POL-003</a>: 신규 참가자 진입 시 기존 참가자 전원 알림</li>
+            <li><a href="policies.html#POL-004" class="xref">POL-004</a>: SSE 하트비트 15초 주기 전송</li>
+          </ul>
+
+          <h3>에러 상황</h3>
+          <ul class="related-errors">
+            <li><a href="policies.html#ERR-001" class="xref">ERR-001</a>: 실시간 채널 연결 파라미터 누락 — 정상적인 방 URL로 다시 접근</li>
+          </ul>
+
+          <h3>관련 용어</h3>
+          <ul class="related-terms">
+            <li><a href="glossary.html#term-SSE" class="xref">SSE</a>: 서버에서 클라이언트로 이벤트를 단방향 스트리밍하는 기술</li>
+            <li><a href="glossary.html#term-피어" class="xref">피어</a>: 방에 접속 중인 개별 참가자</li>
+            <li><a href="glossary.html#term-하트비트" class="xref">하트비트</a>: 연결 유지를 위한 빈 메시지 프레임</li>
+          </ul>
+        </div>
+
+        <div class="spec-feature" id="feature-p2p-negotiation">
+          <h2>P2P 연결 협상</h2>
+
+          <h3>이 기능은 무엇인가</h3>
+          <p>두 참가자 간에 서버를 거치지 않는 직접 통신 채널(P2P DataChannel)을 수립하기 위해, 네트워크 협상 정보를 교환하는 기능이다. 이 과정이 성공하면 게임 메시지가 서버 없이 참가자 간에 직접 오간다.</p>
+
+          <h3>사용자 시나리오</h3>
+          <ol class="scenario-steps">
+            <li>신규 참가자가 기존 참가자 각각에게 연결 제안(Offer)을 보낸다</li>
+            <li>기존 참가자가 응답(Answer)을 반환한다</li>
+            <li>양측이 네트워크 경로 후보(ICE candidate)를 교환한다</li>
+            <li>최적 경로가 선택되면 P2P DataChannel이 열린다</li>
+          </ol>
+
+          <h3>왜 이렇게 동작하는가</h3>
+          <ul class="design-decisions">
+            <li><strong>신규 측이 Offer</strong>: Full Mesh 구조에서 양측이 동시에 Offer를 보내는 충돌(glare)을 방지한다</li>
+            <li><strong>ICE 배치 전송</strong>: 100ms 간격으로 ICE candidate를 모아 전송하여 서버 부하를 줄인다</li>
+            <li><strong>ICE 버퍼링</strong>: 네트워크 지연으로 Offer보다 ICE가 먼저 도착해도 안전하게 처리한다</li>
+            <li><strong>STUN 3개 병렬</strong>: 단일 서버 장애에 대비하여 네트워크 주소 수집 성공률을 높인다</li>
+          </ul>
+
+          <h3>주요 정책</h3>
+          <ul class="related-policies">
+            <li><a href="policies.html#POL-005" class="xref">POL-005</a>: Offer 발신 주체는 항상 신규 진입 참가자</li>
+            <li><a href="policies.html#POL-006" class="xref">POL-006</a>: Offer 도착 전 ICE candidate 버퍼링</li>
+            <li><a href="policies.html#POL-007" class="xref">POL-007</a>: ICE candidate 100ms 배치 전송</li>
+            <li><a href="policies.html#POL-008" class="xref">POL-008</a>: STUN 서버 3개 병렬 사용</li>
+          </ul>
+
+          <h3>에러 상황</h3>
+          <ul class="related-errors">
+            <li><a href="policies.html#ERR-002" class="xref">ERR-002</a>: WebRTC P2P 연결 수립 실패 — 사용자 조작 불필요, 8초 후 릴레이 모드로 자동 전환</li>
+            <li><a href="policies.html#ERR-003" class="xref">ERR-003</a>: ICE candidate 처리 오류 — 자동 재시도 또는 릴레이 모드 전환</li>
+          </ul>
+
+          <h3>관련 용어</h3>
+          <ul class="related-terms">
+            <li><a href="glossary.html#term-OfferAnswer" class="xref">Offer / Answer</a>: P2P 연결 수립을 위한 세션 설명 쌍</li>
+            <li><a href="glossary.html#term-ICEcandidate" class="xref">ICE candidate</a>: P2P 연결 가능한 네트워크 경로 후보</li>
+            <li><a href="glossary.html#term-P2PDataChannel" class="xref">P2P DataChannel</a>: 참가자 간 직접 양방향 게임 메시지 채널</li>
+            <li><a href="glossary.html#term-시그널링" class="xref">시그널링</a>: 네트워크 협상 정보를 교환하는 과정</li>
+          </ul>
+        </div>
+
+        <div class="spec-feature" id="feature-relay-fallback">
+          <h2>서버 릴레이 폴백</h2>
+
+          <h3>이 기능은 무엇인가</h3>
+          <p>P2P 직접 연결이 실패한 환경에서도 게임이 진행될 수 있도록, 서버가 게임 메시지를 중계하는 폴백 전송 방식이다. 8초 이내에 P2P 연결이 열리지 않으면 자동으로 전환된다.</p>
+
+          <h3>사용자 시나리오</h3>
+          <ol class="scenario-steps">
+            <li>P2P 연결 시도가 시작된다</li>
+            <li>8초 이내에 연결이 열리면 P2P 모드로 게임이 진행된다</li>
+            <li>8초가 지나도 연결이 열리지 않으면 시스템이 자동으로 서버 릴레이 모드로 전환한다</li>
+            <li>릴레이 모드에서도 게임 기능은 동일하게 동작한다</li>
+            <li>이후 새 참가자가 들어오면 P2P 협상 없이 즉시 릴레이로 연결된다</li>
+          </ol>
+
+          <h3>왜 이렇게 동작하는가</h3>
+          <ul class="design-decisions">
+            <li><strong>8초 타임아웃</strong>: 대부분의 P2P 연결은 수 초 내 성립하므로, 8초는 충분한 대기 시간이면서 사용자 체감 지연을 최소화한다</li>
+            <li><strong>비가역 전환</strong>: 릴레이 모드로 전환한 뒤 P2P로 되돌아가지 않아 불안정한 연결 전환을 방지한다</li>
+            <li><strong>PeerConnection 즉시 정리</strong>: 미완성 연결의 리소스 낭비와 오류 이벤트를 방지한다</li>
+          </ul>
+
+          <h3>주요 정책</h3>
+          <ul class="related-policies">
+            <li><a href="policies.html#POL-009" class="xref">POL-009</a>: P2P 실패 시 8초 후 릴레이 자동 전환, 비가역</li>
+            <li><a href="policies.html#POL-010" class="xref">POL-010</a>: P2P 개통 시 릴레이 타이머 즉시 취소</li>
+            <li><a href="policies.html#POL-011" class="xref">POL-011</a>: 릴레이 전환 시 기존 PeerConnection 즉시 정리</li>
+            <li><a href="policies.html#POL-013" class="xref">POL-013</a>: 릴레이 모드에서 신규 참가자 WebRTC 협상 생략</li>
+          </ul>
+
+          <h3>관련 용어</h3>
+          <ul class="related-terms">
+            <li><a href="glossary.html#term-서버릴레이모드" class="xref">릴레이 모드</a>: P2P 실패 시 서버 경유 메시지 전달 방식</li>
+            <li><a href="glossary.html#term-전송경로" class="xref">전송 경로</a>: P2P / 릴레이 / 연결 중 세 가지 상태</li>
+          </ul>
+        </div>
+
+        <div class="spec-feature" id="feature-peer-disconnect">
+          <h2>참가자 퇴장 감지</h2>
+
+          <h3>이 기능은 무엇인가</h3>
+          <p>참가자가 방을 나가거나 연결이 끊겼을 때 이를 감지하여 나머지 참가자에게 알리는 기능이다. 브라우저 종료와 자발적 이탈 두 경로를 모두 처리하며, 중복 알림을 방지한다.</p>
+
+          <h3>사용자 시나리오</h3>
+          <ol class="scenario-steps">
+            <li>참가자가 "나가기" 버튼을 클릭하거나 브라우저를 닫는다</li>
+            <li>시스템이 서버에 이탈을 알린다</li>
+            <li>서버가 해당 참가자를 방에서 제거하고 나머지 참가자에게 알린다</li>
+            <li>마지막 참가자가 나가면 방이 자동으로 삭제된다</li>
+          </ol>
+
+          <h3>왜 이렇게 동작하는가</h3>
+          <ul class="design-decisions">
+            <li><strong>이중 경로</strong>: 자발적 퇴장 신호와 SSE 연결 종료 감지를 모두 사용하여 어떤 종료 방식이든 감지한다</li>
+            <li><strong>중복 방지</strong>: 두 경로가 동시에 실행되어도 퇴장 알림이 한 번만 전달된다</li>
+            <li><strong>방 자동 소멸</strong>: 서버 메모리에 불필요한 빈 방이 남지 않도록 자동 정리한다</li>
+          </ul>
+
+          <h3>주요 정책</h3>
+          <ul class="related-policies">
+            <li><a href="policies.html#POL-015" class="xref">POL-015</a>: 피어 퇴장 중복 알림 방지</li>
+            <li><a href="policies.html#POL-016" class="xref">POL-016</a>: 마지막 참가자 퇴장 시 방 자동 소멸</li>
+            <li><a href="policies.html#POL-017" class="xref">POL-017</a>: ICE 연결 실패 즉시 참가자 해제</li>
+          </ul>
+
+          <h3>관련 용어</h3>
+          <ul class="related-terms">
+            <li><a href="glossary.html#term-자발적퇴장신호" class="xref">자발적 퇴장 신호</a>: 브라우저 종료 직전 서버에 보내는 퇴장 알림</li>
+          </ul>
+        </div>
+
+        <div class="spec-feature" id="feature-room-check">
+          <h2>방 존재 여부 확인</h2>
+
+          <h3>이 기능은 무엇인가</h3>
+          <p>초대 링크로 방에 접근할 때 해당 방이 실제로 존재하는지 서버에 확인하는 기능이다. 방이 없으면 입장을 차단하고 안내 화면을 표시한다.</p>
+
+          <h3>사용자 시나리오</h3>
+          <ol class="scenario-steps">
+            <li>사용자가 초대 링크를 통해 방 페이지에 접근한다</li>
+            <li>시스템이 서버에 방 존재 여부를 확인한다</li>
+            <li>방이 존재하면 이름 입력 폼을 표시한다</li>
+            <li>방이 없으면 "방을 찾을 수 없습니다" 화면을 표시한다</li>
+          </ol>
+
+          <h3>왜 이렇게 동작하는가</h3>
+          <ul class="design-decisions">
+            <li><strong>활성 연결 기준</strong>: 서버 메모리에 활성 SSE 연결이 있는 방만 존재하는 것으로 판단하여, 종료된 방으로의 진입을 방지한다</li>
+          </ul>
+
+          <h3>주요 정책</h3>
+          <ul class="related-policies">
+            <li><a href="policies.html#POL-018" class="xref">POL-018</a>: 방 존재 여부는 활성 SSE 연결 기준으로 판단</li>
+          </ul>
+
+          <h3>관련 용어</h3>
+          <ul class="related-terms">
+            <li><a href="glossary.html#term-서버인메모리방상태" class="xref">서버 인메모리 방 상태</a>: 서버가 메모리에 보관하는 방별 참가자 목록</li>
+          </ul>
+        </div>
+
+        <div class="spec-feature" id="feature-game-message">
+          <h2>게임 메시지 전달</h2>
+
+          <h3>이 기능은 무엇인가</h3>
+          <p>투표, 공개, 재투표, 다음 티켓 등 게임 상태 변경 메시지를 참가자 간에 전달하는 기능이다. P2P 모드에서는 참가자 간 직접, 릴레이 모드에서는 서버를 경유하여 전달한다.</p>
+
+          <h3>사용자 시나리오</h3>
+          <ol class="scenario-steps">
+            <li>참가자가 카드를 선택하면 "투표 완료" 메시지가 다른 참가자에게 전달된다</li>
+            <li>호스트가 결과를 공개하면 "투표 공개" 메시지와 투표값이 전달된다</li>
+            <li>신규 참가자가 입장하면 기존 참가자에게 "상태 동기화 요청"을 보내고 전체 게임 상태를 응답받는다</li>
+          </ol>
+
+          <h3>왜 이렇게 동작하는가</h3>
+          <ul class="design-decisions">
+            <li><strong>열린 채널만 전송</strong>: 닫힌 DataChannel에 전송을 시도하면 오류가 발생하므로 상태를 확인한다</li>
+            <li><strong>발신자 제외</strong>: 발신자는 이미 상태를 알고 있으므로 자신에게 다시 보내지 않아 중복 처리를 방지한다</li>
+            <li><strong>수신자 지정 분기</strong>: 브로드캐스트(전체 전달)와 개별 전달(동기화 응답)을 메시지 유형에 따라 구분한다</li>
+          </ul>
+
+          <h3>주요 정책</h3>
+          <ul class="related-policies">
+            <li><a href="policies.html#POL-019" class="xref">POL-019</a>: P2P 모드에서 열린 DataChannel에만 전송</li>
+            <li><a href="policies.html#POL-020" class="xref">POL-020</a>: 브로드캐스트는 발신자 본인 제외</li>
+            <li><a href="policies.html#POL-022" class="xref">POL-022</a>: 릴레이 POST 수신자 지정에 따른 전달 범위 분기</li>
+          </ul>
+
+          <h3>에러 상황</h3>
+          <ul class="related-errors">
+            <li><a href="policies.html#ERR-004" class="xref">ERR-004</a>: 릴레이 메시지 전송 실패 — 지속 시 방 재입장으로 상태 재동기화</li>
+          </ul>
+
+          <h3>관련 용어</h3>
+          <ul class="related-terms">
+            <li><a href="glossary.html#term-게임메시지" class="xref">게임 메시지</a>: 게임 상태 변경을 전달하는 데이터 단위</li>
+            <li><a href="glossary.html#term-브로드캐스트" class="xref">브로드캐스트</a>: 발신자 제외 전원 전달 방식</li>
+          </ul>
+        </div>
+      </article>
+    </main>
+  </div>
+  <script src="../../assets/search-index.js"></script>
+  <script src="../../assets/app.js"></script>
+</body>
+</html>

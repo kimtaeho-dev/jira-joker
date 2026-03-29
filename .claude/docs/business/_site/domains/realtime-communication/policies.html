@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>실시간 통신 정책서 — Jira Joker 비즈니스 지식</title>
+  <link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body>
+  <div class="layout">
+    <nav class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h1 class="sidebar-title">Jira Joker</h1>
+        <button class="theme-toggle" id="theme-toggle" aria-label="테마 전환">🌙</button>
+      </div>
+      <div class="search-box">
+        <input type="search" class="search-input" id="search-input" placeholder="검색..." aria-label="검색">
+        <div class="search-results" id="search-results"></div>
+      </div>
+      <ul class="nav-list">
+        <li class="nav-item">
+          <a href="../../index.html" class="nav-link">정책 카탈로그</a>
+        </li>
+        <li class="nav-item">
+          <a href="../../glossary.html" class="nav-link">전체 용어집</a>
+        </li>
+        <li class="nav-item nav-domain">
+          <button class="nav-domain-toggle" aria-expanded="false">Jira 연동</button>
+          <ul class="nav-sublist">
+            <li><a href="../../domains/jira-integration/policies.html" class="nav-link">정책서</a></li>
+            <li><a href="../../domains/jira-integration/spec.html" class="nav-link">기획서</a></li>
+            <li><a href="../../domains/jira-integration/glossary.html" class="nav-link">용어집</a></li>
+          </ul>
+        </li>
+        <li class="nav-item nav-domain">
+          <button class="nav-domain-toggle" aria-expanded="true">실시간 통신</button>
+          <ul class="nav-sublist">
+            <li><a href="../../domains/realtime-communication/policies.html" class="nav-link active">정책서</a></li>
+            <li><a href="../../domains/realtime-communication/spec.html" class="nav-link">기획서</a></li>
+            <li><a href="../../domains/realtime-communication/glossary.html" class="nav-link">용어집</a></li>
+          </ul>
+        </li>
+        <li class="nav-item nav-domain">
+          <button class="nav-domain-toggle" aria-expanded="false">포커 게임</button>
+          <ul class="nav-sublist">
+            <li><a href="../../domains/poker-game/policies.html" class="nav-link">정책서</a></li>
+            <li><a href="../../domains/poker-game/spec.html" class="nav-link">기획서</a></li>
+            <li><a href="../../domains/poker-game/glossary.html" class="nav-link">용어집</a></li>
+          </ul>
+        </li>
+      </ul>
+    </nav>
+    <button class="sidebar-toggle" id="sidebar-toggle" aria-label="메뉴 열기">☰</button>
+    <main class="content">
+      <nav class="breadcrumb" aria-label="현재 위치">
+        <a href="../../index.html" class="breadcrumb-item">홈</a>
+        <span class="breadcrumb-item">실시간 통신</span>
+        <span class="breadcrumb-item">정책서</span>
+      </nav>
+      <article class="page">
+        <h1 class="page-title">실시간 통신 — 서비스 정책서</h1>
+        <p class="page-meta">최종 갱신: 2026-03-29</p>
+
+        <h2 id="sse_connection">poker.sse_connection</h2>
+
+        <h3>Validation 규칙</h3>
+
+        <div class="policy" id="POL-001">
+          <h4>
+            <span class="policy-id">POL-001</span>
+            <span>참가자 식별자와 이름 필수 제공</span>
+            <span class="tag tag-validation">validation</span>
+          </h4>
+          <dl class="policy-fields">
+            <dt>규칙</dt>
+            <dd>방에 입장할 때 참가자 식별자와 표시 이름이 반드시 포함되어야 한다.</dd>
+            <dt>위반 시</dt>
+            <dd>HTTP 400 응답이 반환되고 실시간 채널이 개설되지 않아 방 입장이 차단된다.</dd>
+            <dt>비즈니스 배경</dt>
+            <dd>서버가 피어를 식별하고 방 참가자 목록을 유지하기 위해 두 정보 모두 필요하다.</dd>
+          </dl>
+        </div>
+
+        <h3>상태 정책</h3>
+
+        <div class="policy" id="POL-002">
+          <h4>
+            <span class="policy-id">POL-002</span>
+            <span>방 입장 즉시 기존 참가자 목록 수신</span>
+            <span class="tag tag-state">상태 전이</span>
+          </h4>
+          <dl class="policy-fields">
+            <dt>규칙</dt>
+            <dd>서버는 신규 참가자가 연결되는 즉시 이미 연결된 참가자 목록(자신 제외)을 전달한다.</dd>
+            <dt>전이</dt>
+            <dd><span class="state-from">연결 중</span> → <span class="state-to">기존 참가자 목록 보유</span></dd>
+            <dt>전이 조건</dt>
+            <dd>SSE 채널이 성공적으로 개설된 시점</dd>
+            <dt>역전이</dt>
+            <dd>불가</dd>
+            <dt>영향</dt>
+            <dd>클라이언트는 수신된 목록을 기반으로 각 참가자와 WebRTC 협상을 즉시 시작할 수 있다.</dd>
+          </dl>
+        </div>
+
+        <div class="policy" id="POL-003">
+          <h4>
+            <span class="policy-id">POL-003</span>
+            <span>신규 참가자 진입 시 기존 참가자 전원 알림</span>
+            <span class="tag tag-state">상태 전이</span>
+          </h4>
+          <dl class="policy-fields">
+            <dt>규칙</dt>
+            <dd>새 참가자가 방에 진입하면 발신자 본인을 제외한 기존 참가자 전원에게 진입 알림이 전송된다.</dd>
+            <dt>전이</dt>
+            <dd><span class="state-from">기존 참가자의 알 수 없는 상태</span> → <span class="state-to">신규 참가자 인식</span></dd>
+            <dt>전이 조건</dt>
+            <dd>신규 참가자의 SSE 연결 수립 완료</dd>
+            <dt>역전이</dt>
+            <dd>불가</dd>
+            <dt>영향</dt>
+            <dd>기존 참가자가 신규 참가자와 WebRTC 협상을 시작할 수 있다.</dd>
+          </dl>
+        </div>
+
+        <h3>설정값</h3>
+
+        <div class="policy" id="POL-004">
+          <h4>
+            <span class="policy-id">POL-004</span>
+            <span>SSE 하트비트 15초 주기</span>
+            <span class="tag tag-config">설정값</span>
+          </h4>
+          <dl class="policy-fields">
+            <dt>규칙</dt>
+            <dd>서버는 모든 활성 SSE 연결에 15초마다 빈 하트비트 프레임을 전송한다. 스트림이 이미 닫혀 있으면 전송을 중단한다.</dd>
+            <dt>비즈니스 의미</dt>
+            <dd>브라우저·프록시의 유휴 연결 강제 종료를 방지하고 끊긴 연결을 빠르게 감지한다.</dd>
+            <dt>변경 시 영향</dt>
+            <dd>값을 늘리면 끊긴 연결 감지가 지연되고, 줄이면 서버 부하가 증가한다.</dd>
+          </dl>
+        </div>
+
+        <h2 id="webrtc_negotiation">poker.webrtc_negotiation</h2>
+
+        <h3>Validation 규칙</h3>
+
+        <div class="policy" id="POL-005">
+          <h4>
+            <span class="policy-id">POL-005</span>
+            <span>Offer 발신 주체는 항상 신규 진입 참가자</span>
+            <span class="tag tag-validation">validation</span>
+          </h4>
+          <dl class="policy-fields">
+            <dt>규칙</dt>
+            <dd>WebRTC 협상에서 Offer를 먼저 생성하는 역할은 항상 신규 진입 참가자가 담당한다. 기존 참가자는 Offer를 수신한 후 Answer를 반환한다.</dd>
+            <dt>위반 시</dt>
+            <dd>양측이 동시에 Offer를 생성하면 협상이 충돌(glare)하여 연결 실패</dd>
+            <dt>비즈니스 배경</dt>
+            <dd>Full Mesh 구조에서 협상 역할을 명확히 분리해 글레어 상태를 방지한다.</dd>
+          </dl>
+        </div>
+
+        <div class="policy" id="POL-006">
+          <h4>
+            <span class="policy-id">POL-006</span>
+            <span>Offer 도착 전 ICE candidate 버퍼링</span>
+            <span class="tag tag-validation">validation</span>
+          </h4>
+          <dl class="policy-fields">
+            <dt>규칙</dt>
+            <dd>Offer 수신 이전에 ICE candidate가 먼저 도착한 경우, 해당 candidate를 버퍼에 저장하고 Offer 수신 완료 후 일괄 적용한다.</dd>
+            <dt>위반 시</dt>
+            <dd>원격 정보 없이 ICE candidate를 적용하면 연결 수립 실패</dd>
+            <dt>비즈니스 배경</dt>
+            <dd>네트워크 지연으로 SDP와 ICE candidate의 도착 순서가 보장되지 않는 환경을 안전하게 처리한다.</dd>
+          </dl>
+        </div>
+
+        <h3>설정값</h3>
+
+        <div class="policy" id="POL-007">
+          <h4>
+            <span class="policy-id">POL-007</span>
+            <span>ICE candidate 100ms 배치 전송</span>
+            <span class="tag tag-config">설정값</span>
+          </h4>
+          <dl class="policy-fields">
+            <dt>규칙</dt>
+            <dd>ICE candidate는 개별 즉시 전송하지 않고 100ms 구간에 수집된 후 일괄 전송한다. ICE gathering이 완료되면 잔여 candidate를 즉시 전송한다.</dd>
+            <dt>비즈니스 의미</dt>
+            <dd>시그널링 서버와의 왕복 횟수를 줄여 연결 수립 속도를 향상시킨다.</dd>
+            <dt>변경 시 영향</dt>
+            <dd>값을 늘리면 연결 수립이 느려지고, 줄이면 서버 요청이 증가한다.</dd>
+          </dl>
+        </div>
+
+        <div class="policy" id="POL-008">
+          <h4>
+            <span class="policy-id">POL-008</span>
+            <span>STUN 서버 3개 병렬 사용</span>
+            <span class="tag tag-config">설정값</span>
+          </h4>
+          <dl class="policy-fields">
+            <dt>규칙</dt>
+            <dd>P2P 연결 시도 시 외부 STUN 서버 3개를 동시에 활용해 NAT 주소를 수집한다.</dd>
+            <dt>비즈니스 의미</dt>
+            <dd>단일 STUN 서버 장애 시에도 NAT 통과 주소 수집이 가능하다.</dd>
+            <dt>변경 시 영향</dt>
+            <dd>STUN 서버 가용성에 따라 NAT 통과 성공률이 달라진다.</dd>
+          </dl>
+        </div>
+
+        <h2 id="relay_fallback">poker.relay_fallback</h2>
+
+        <h3>상태 정책</h3>
+
+        <div class="policy" id="POL-009">
+          <h4>
+            <span class="policy-id">POL-009</span>
+            <span>P2P 연결 실패 시 8초 후 서버 릴레이 자동 전환</span>
+            <span class="tag tag-state">상태 전이</span>
+          </h4>
+          <dl class="policy-fields">
+            <dt>규칙</dt>
+            <dd>참가자가 1명 이상 존재하는 방에서 8초 이내에 단 하나의 P2P DataChannel도 열리지 않으면 서버 릴레이 모드로 자동 전환한다.</dd>
+            <dt>전이</dt>
+            <dd><span class="state-from">연결 중(connecting)</span> → <span class="state-to">서버 릴레이(relay)</span></dd>
+            <dt>전이 조건</dt>
+            <dd>8초 경과 후 열린 DataChannel 없음</dd>
+            <dt>역전이</dt>
+            <dd>불가 (릴레이 모드는 세션 종료 전까지 유지)</dd>
+            <dt>영향</dt>
+            <dd>이후 모든 게임 메시지가 서버 SSE 채널을 통해 중계된다. 방화벽·NAT 제한 환경에서도 게임 진행이 가능해진다.</dd>
+          </dl>
+        </div>
+
+        <div class="policy" id="POL-010">
+          <h4>
+            <span class="policy-id">POL-010</span>
+            <span>P2P DataChannel 개통 시 릴레이 전환 타이머 즉시 취소</span>
+            <span class="tag tag-state">상태 전이</span>
+          </h4>
+          <dl class="policy-fields">
+            <dt>규칙</dt>
+            <dd>P2P DataChannel이 성공적으로 열리면 릴레이 전환 대기 타이머를 즉시 취소한다.</dd>
+            <dt>전이</dt>
+            <dd><span class="state-from">연결 중(connecting)</span> → <span class="state-to">P2P(p2p)</span></dd>
+            <dt>전이 조건</dt>
+            <dd>DataChannel open 이벤트 수신</dd>
+            <dt>역전이</dt>
+            <dd>불가 (P2P 개통 후 릴레이로 되돌아가지 않음)</dd>
+            <dt>영향</dt>
+            <dd>P2P 연결에 성공하면 서버 릴레이 없이 직접 메시지를 교환한다.</dd>
+          </dl>
+        </div>
+
+        <div class="policy" id="POL-011">
+          <h4>
+            <span class="policy-id">POL-011</span>
+            <span>릴레이 모드 전환 시 기존 PeerConnection 즉시 정리</span>
+            <span class="tag tag-state">상태 전이</span>
+          </h4>
+          <dl class="policy-fields">
+            <dt>규칙</dt>
+            <dd>서버 릴레이 모드로 전환되면 모든 기존 WebRTC PeerConnection을 즉시 닫고 이름 정보만 유지한다.</dd>
+            <dt>전이</dt>
+            <dd><span class="state-from">P2P 협상 중</span> → <span class="state-to">릴레이 대기 상태</span></dd>
+            <dt>전이 조건</dt>
+            <dd>릴레이 모드 활성화 시</dd>
+            <dt>역전이</dt>
+            <dd>불가</dd>
+            <dt>영향</dt>
+            <dd>미완성 연결이 정리되어 리소스 낭비와 오류 이벤트가 방지된다.</dd>
+          </dl>
+        </div>
+
+        <div class="policy" id="POL-012">
+          <h4>
+            <span class="policy-id">POL-012</span>
+            <span>릴레이 모드 중복 활성화 방지</span>
+            <span class="tag tag-state">상태 전이</span>
+          </h4>
+          <dl class="policy-fields">
+            <dt>규칙</dt>
+            <dd>릴레이 모드는 한 번 활성화되면 이후 동일한 전환 시도를 무시한다.</dd>
+            <dt>전이</dt>
+            <dd><span class="state-from">이미 릴레이 상태</span> → <span class="state-to">변경 없음</span></dd>
+            <dt>전이 조건</dt>
+            <dd>릴레이 모드 전환이 중복 시도될 때</dd>
+            <dt>영향</dt>
+            <dd>중복 정리 및 중복 알림이 발생하지 않는다.</dd>
+          </dl>
+        </div>
+
+        <h3>Validation 규칙</h3>
+
+        <div class="policy" id="POL-013">
+          <h4>
+            <span class="policy-id">POL-013</span>
+            <span>릴레이 모드에서 신규 참가자 진입 시 WebRTC 협상 생략</span>
+            <span class="tag tag-validation">validation</span>
+          </h4>
+          <dl class="policy-fields">
+            <dt>규칙</dt>
+            <dd>이미 릴레이 모드로 운영 중인 방에 새 참가자가 진입하면 WebRTC 협상 없이 즉시 연결 완료로 처리한다.</dd>
+            <dt>위반 시</dt>
+            <dd>불필요한 WebRTC 협상으로 연결 지연 및 자원 낭비</dd>
+            <dt>비즈니스 배경</dt>
+            <dd>릴레이 모드에서는 서버가 중계하므로 P2P 협상이 불필요하다.</dd>
+          </dl>
+        </div>
+
+        <div class="policy" id="POL-014">
+          <h4>
+            <span class="policy-id">POL-014</span>
+            <span>릴레이 모드 전환 시 신규 진입 참가자만 상태 동기화 요청</span>
+            <span class="tag tag-validation">validation</span>
+          </h4>
+          <dl class="policy-fields">
+            <dt>규칙</dt>
+            <dd>릴레이 모드 전환 시 신규 진입 참가자만 게임 상태 동기화 요청을 보낸다. 기존 참가자는 요청을 보내지 않는다.</dd>
+            <dt>위반 시</dt>
+            <dd>기존 참가자가 동기화 요청을 중복 전송하면 호스트가 빈 응답을 받을 수 있음</dd>
+            <dt>비즈니스 배경</dt>
+            <dd>기존 참가자는 이미 최신 게임 상태를 보유하고 있어 요청이 불필요하다.</dd>
+          </dl>
+        </div>
+
+        <h2 id="peer_disconnect">poker.peer_disconnect</h2>
+
+        <h3>상태 정책</h3>
+
+        <div class="policy" id="POL-015">
+          <h4>
+            <span class="policy-id">POL-015</span>
+            <span>피어 퇴장 중복 알림 방지</span>
+            <span class="tag tag-state">상태 전이</span>
+          </h4>
+          <dl class="policy-fields">
+            <dt>규칙</dt>
+            <dd>피어가 퇴장할 때 서버는 해당 피어가 실제로 방 목록에서 제거된 경우에만 퇴장 알림을 나머지 참가자에게 전송한다. 이미 제거된 피어의 퇴장 처리는 무시한다.</dd>
+            <dt>전이</dt>
+            <dd><span class="state-from">피어 존재</span> → <span class="state-to">피어 제거 및 퇴장 알림 전송</span></dd>
+            <dt>전이 조건</dt>
+            <dd>SSE abort 또는 sendBeacon leave POST 중 첫 번째 처리</dd>
+            <dt>역전이</dt>
+            <dd>불가</dd>
+            <dt>영향</dt>
+            <dd>SSE 연결 종료와 자발적 퇴장 신호가 경합하더라도 퇴장 알림이 한 번만 전송된다.</dd>
+          </dl>
+        </div>
+
+        <div class="policy" id="POL-016">
+          <h4>
+            <span class="policy-id">POL-016</span>
+            <span>마지막 참가자 퇴장 시 방 자동 소멸</span>
+            <span class="tag tag-state">상태 전이</span>
+          </h4>
+          <dl class="policy-fields">
+            <dt>규칙</dt>
+            <dd>방의 모든 참가자가 퇴장하면 서버 메모리에서 해당 방 정보가 즉시 삭제된다.</dd>
+            <dt>전이</dt>
+            <dd><span class="state-from">방 존재</span> → <span class="state-to">방 소멸</span></dd>
+            <dt>전이 조건</dt>
+            <dd>마지막 참가자가 방에서 제거될 때</dd>
+            <dt>역전이</dt>
+            <dd>불가 (방이 삭제된 후 재생성 불가)</dd>
+            <dt>영향</dt>
+            <dd>이후 동일한 방 ID로 접근하면 방이 존재하지 않는 것으로 응답된다.</dd>
+          </dl>
+        </div>
+
+        <div class="policy" id="POL-017">
+          <h4>
+            <span class="policy-id">POL-017</span>
+            <span>ICE 연결 실패 즉시 참가자 해제</span>
+            <span class="tag tag-state">상태 전이</span>
+          </h4>
+          <dl class="policy-fields">
+            <dt>규칙</dt>
+            <dd>WebRTC ICE 연결이 실패 상태로 전환되면 일반 연결 상태 이벤트보다 먼저 해당 참가자를 즉시 해제 처리한다.</dd>
+            <dt>전이</dt>
+            <dd><span class="state-from">ICE 실패</span> → <span class="state-to">참가자 연결 해제</span></dd>
+            <dt>전이 조건</dt>
+            <dd>ICE 연결 상태가 'failed'로 변경될 때</dd>
+            <dt>역전이</dt>
+            <dd>불가</dd>
+            <dt>영향</dt>
+            <dd>연결 실패가 빠르게 감지되어 UI에서 참가자가 신속히 제거된다.</dd>
+          </dl>
+        </div>
+
+        <h2 id="room_existence_check">poker.room_existence_check</h2>
+
+        <h3>Validation 규칙</h3>
+
+        <div class="policy" id="POL-018">
+          <h4>
+            <span class="policy-id">POL-018</span>
+            <span>방 존재 여부는 활성 연결 기준</span>
+            <span class="tag tag-validation">validation</span>
+          </h4>
+          <dl class="policy-fields">
+            <dt>규칙</dt>
+            <dd>방이 존재하는지 여부는 서버 메모리에 활성 SSE 연결을 보유한 참가자가 있는지로 판단한다. 연결 중인 참가자가 없는 방은 존재하지 않는 것으로 간주된다.</dd>
+            <dt>비즈니스 배경</dt>
+            <dd>서버 재시작이나 모든 참가자 퇴장 후에는 방이 더 이상 유효하지 않음을 보장한다.</dd>
+          </dl>
+        </div>
+
+        <h2 id="game_message_broadcast">poker.game_message_broadcast</h2>
+
+        <h3>Validation 규칙</h3>
+
+        <div class="policy" id="POL-019">
+          <h4>
+            <span class="policy-id">POL-019</span>
+            <span>P2P 모드에서 열린 DataChannel에만 전송</span>
+            <span class="tag tag-validation">validation</span>
+          </h4>
+          <dl class="policy-fields">
+            <dt>규칙</dt>
+            <dd>P2P 모드에서 메시지를 전송할 때 DataChannel이 열린(open) 상태인 참가자에게만 전달한다.</dd>
+            <dt>위반 시</dt>
+            <dd>닫힌 채널에 전송하면 전송 오류 발생</dd>
+            <dt>비즈니스 배경</dt>
+            <dd>DataChannel 상태를 확인하지 않으면 예외가 발생해 이후 메시지 전송도 차단될 수 있다.</dd>
+          </dl>
+        </div>
+
+        <div class="policy" id="POL-020">
+          <h4>
+            <span class="policy-id">POL-020</span>
+            <span>브로드캐스트는 발신자 본인 제외</span>
+            <span class="tag tag-validation">validation</span>
+          </h4>
+          <dl class="policy-fields">
+            <dt>규칙</dt>
+            <dd>브로드캐스트 메시지는 발신자를 제외한 나머지 참가자에게만 전달된다.</dd>
+            <dt>위반 시</dt>
+            <dd>발신자가 자신이 보낸 메시지를 다시 수신해 상태 중복 적용 발생</dd>
+            <dt>비즈니스 배경</dt>
+            <dd>발신자는 이미 자신의 상태 변경을 알고 있으므로 수신 불필요하다.</dd>
+          </dl>
+        </div>
+
+        <div class="policy" id="POL-021">
+          <h4>
+            <span class="policy-id">POL-021</span>
+            <span>닫힌 SSE 스트림 전송 오류 무시</span>
+            <span class="tag tag-validation">validation</span>
+          </h4>
+          <dl class="policy-fields">
+            <dt>규칙</dt>
+            <dd>이미 닫힌 SSE 스트림에 메시지를 전송할 때 발생하는 오류는 무시하고 나머지 참가자 전송을 계속 진행한다.</dd>
+            <dt>위반 시</dt>
+            <dd>오류 미처리 시 전체 브로드캐스트 루프가 중단될 수 있음</dd>
+            <dt>비즈니스 배경</dt>
+            <dd>네트워크 불안정으로 일부 스트림이 예기치 않게 닫히더라도 다른 참가자에게 메시지가 전달되어야 한다.</dd>
+          </dl>
+        </div>
+
+        <div class="policy" id="POL-022">
+          <h4>
+            <span class="policy-id">POL-022</span>
+            <span>릴레이 POST 수신자 지정 여부에 따른 전달 범위</span>
+            <span class="tag tag-validation">validation</span>
+          </h4>
+          <dl class="policy-fields">
+            <dt>규칙</dt>
+            <dd>서버 릴레이를 통한 메시지 전송 시 수신자가 지정되면 해당 참가자에게만, 지정이 없으면 발신자를 제외한 전체에게 전달한다.</dd>
+            <dt>위반 시</dt>
+            <dd>개인 메시지(sync_response)가 전체에게 전달되면 불필요한 상태 갱신 발생</dd>
+            <dt>비즈니스 배경</dt>
+            <dd>게임 메시지에 따라 전체 전달(reset/reveal)과 특정 피어 전달(sync_response)이 혼재한다.</dd>
+          </dl>
+        </div>
+
+        <h3>에러 시나리오</h3>
+
+        <div class="policy" id="ERR-001">
+          <h4>
+            <span class="policy-id">ERR-001</span>
+            <span>실시간 채널 연결 파라미터 누락</span>
+            <span class="tag tag-constraint">데이터 제약</span>
+          </h4>
+          <dl class="policy-fields">
+            <dt>메시지</dt>
+            <dd class="error-message">"Missing peerId or name"</dd>
+            <dt>발생 상황</dt>
+            <dd>참가자 식별자 또는 표시 이름 없이 실시간 채널 연결 요청</dd>
+            <dt>사용자 영향</dt>
+            <dd>방 입장이 차단되고 연결이 즉시 종료된다.</dd>
+            <dt>대응 방법</dt>
+            <dd>정상적인 방 URL로 다시 접근한다. 애플리케이션이 정상 동작하는 경우 일반 사용 중 발생하지 않는다.</dd>
+          </dl>
+        </div>
+
+        <div class="policy" id="ERR-002">
+          <h4>
+            <span class="policy-id">ERR-002</span>
+            <span>WebRTC P2P 연결 수립 실패</span>
+            <span class="tag tag-constraint">데이터 제약</span>
+          </h4>
+          <dl class="policy-fields">
+            <dt>메시지</dt>
+            <dd class="error-message">(내부 경고 로그, 사용자에게 노출되지 않음)</dd>
+            <dt>발생 상황</dt>
+            <dd>Offer/Answer 협상 오류 또는 ICE 연결 실패로 P2P 채널을 열 수 없음</dd>
+            <dt>사용자 영향</dt>
+            <dd>즉각적인 영향 없음. 8초 경과 후 서버 릴레이 모드로 자동 전환되어 게임 진행 가능</dd>
+            <dt>대응 방법</dt>
+            <dd>사용자 조작 불필요 — 시스템이 자동으로 서버 릴레이 모드로 전환한다.</dd>
+          </dl>
+        </div>
+
+        <div class="policy" id="ERR-003">
+          <h4>
+            <span class="policy-id">ERR-003</span>
+            <span>ICE candidate 처리 오류</span>
+            <span class="tag tag-constraint">데이터 제약</span>
+          </h4>
+          <dl class="policy-fields">
+            <dt>메시지</dt>
+            <dd class="error-message">(내부 경고 로그, 사용자에게 노출되지 않음)</dd>
+            <dt>발생 상황</dt>
+            <dd>특정 ICE candidate를 적용하는 과정에서 오류 발생</dd>
+            <dt>사용자 영향</dt>
+            <dd>해당 네트워크 경로가 사용 불가. 다른 경로로 연결 재시도 가능</dd>
+            <dt>대응 방법</dt>
+            <dd>사용자 조작 불필요 — 다른 ICE candidate로 자동 재시도되거나 릴레이 모드로 전환된다.</dd>
+          </dl>
+        </div>
+
+        <div class="policy" id="ERR-004">
+          <h4>
+            <span class="policy-id">ERR-004</span>
+            <span>릴레이 메시지 전송 실패</span>
+            <span class="tag tag-constraint">데이터 제약</span>
+          </h4>
+          <dl class="policy-fields">
+            <dt>메시지</dt>
+            <dd class="error-message">(오류 무시, 사용자에게 노출되지 않음)</dd>
+            <dt>발생 상황</dt>
+            <dd>서버 릴레이 경유 메시지 전송 중 네트워크 오류 발생</dd>
+            <dt>사용자 영향</dt>
+            <dd>해당 메시지가 전달되지 않아 일시적인 게임 상태 불일치 발생 가능</dd>
+            <dt>대응 방법</dt>
+            <dd>재시도 없음. 지속적인 문제 발생 시 방을 나갔다가 다시 입장해 상태를 재동기화한다.</dd>
+          </dl>
+        </div>
+      </article>
+    </main>
+  </div>
+  <script src="../../assets/search-index.js"></script>
+  <script src="../../assets/app.js"></script>
+</body>
+</html>

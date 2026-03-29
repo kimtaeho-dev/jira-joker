@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jira 연동 기획서 — Jira Joker 비즈니스 지식</title>
+  <link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body>
+  <div class="layout">
+    <nav class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h1 class="sidebar-title">Jira Joker</h1>
+        <button class="theme-toggle" id="theme-toggle" aria-label="테마 전환">🌙</button>
+      </div>
+      <div class="search-box">
+        <input type="search" class="search-input" id="search-input" placeholder="검색..." aria-label="검색">
+        <div class="search-results" id="search-results"></div>
+      </div>
+      <ul class="nav-list">
+        <li class="nav-item">
+          <a href="../../index.html" class="nav-link">정책 카탈로그</a>
+        </li>
+        <li class="nav-item">
+          <a href="../../glossary.html" class="nav-link">전체 용어집</a>
+        </li>
+        <li class="nav-item nav-domain">
+          <button class="nav-domain-toggle" aria-expanded="true">Jira 연동</button>
+          <ul class="nav-sublist">
+            <li><a href="../../domains/jira-integration/policies.html" class="nav-link">정책서</a></li>
+            <li><a href="../../domains/jira-integration/spec.html" class="nav-link active">기획서</a></li>
+            <li><a href="../../domains/jira-integration/glossary.html" class="nav-link">용어집</a></li>
+          </ul>
+        </li>
+        <li class="nav-item nav-domain">
+          <button class="nav-domain-toggle" aria-expanded="false">실시간 통신</button>
+          <ul class="nav-sublist">
+            <li><a href="../../domains/realtime-communication/policies.html" class="nav-link">정책서</a></li>
+            <li><a href="../../domains/realtime-communication/spec.html" class="nav-link">기획서</a></li>
+            <li><a href="../../domains/realtime-communication/glossary.html" class="nav-link">용어집</a></li>
+          </ul>
+        </li>
+        <li class="nav-item nav-domain">
+          <button class="nav-domain-toggle" aria-expanded="false">포커 게임</button>
+          <ul class="nav-sublist">
+            <li><a href="../../domains/poker-game/policies.html" class="nav-link">정책서</a></li>
+            <li><a href="../../domains/poker-game/spec.html" class="nav-link">기획서</a></li>
+            <li><a href="../../domains/poker-game/glossary.html" class="nav-link">용어집</a></li>
+          </ul>
+        </li>
+      </ul>
+    </nav>
+    <button class="sidebar-toggle" id="sidebar-toggle" aria-label="메뉴 열기">☰</button>
+    <main class="content">
+      <nav class="breadcrumb" aria-label="현재 위치">
+        <a href="../../index.html" class="breadcrumb-item">홈</a>
+        <span class="breadcrumb-item">Jira 연동</span>
+        <span class="breadcrumb-item">기획서</span>
+      </nav>
+      <article class="page">
+        <h1 class="page-title">Jira 연동 — 기획서</h1>
+        <p class="page-meta">최종 갱신: 2026-03-29</p>
+
+        <div class="domain-overview">
+          <h2>도메인 개요</h2>
+          <p>Jira Cloud 및 Server·DC 인스턴스에 접속하여 Planning Poker 세션에 사용할 이슈 목록을 가져오는 역할을 담당한다. 사용자는 인증 정보를 입력하고, Epic을 검색하고, 하위 이슈를 불러와 포커 세션을 시작할 수 있다.</p>
+        </div>
+
+        <div class="spec-feature" id="feature-jira-auth">
+          <h2>Jira 인증 검증</h2>
+
+          <h3>이 기능은 무엇인가</h3>
+          <p>사용자가 입력한 Jira 접속 정보(도메인, 이메일, 토큰)가 유효한지 실제 Jira 서버에 확인하는 기능이다. Cloud와 Server·DC 두 가지 인증 방식을 지원하며, 사용자가 선택한 모드에 맞게 필요한 정보를 검증한다.</p>
+
+          <h3>사용자 시나리오</h3>
+          <ol class="scenario-steps">
+            <li>사용자가 Cloud 또는 Server·DC 인증 모드를 선택한다</li>
+            <li>Cloud: 도메인, 이메일, API 토큰을 입력한다 / Server·DC: 도메인, Personal Access Token을 입력한다</li>
+            <li>"다음" 버튼을 클릭하면 시스템이 Jira 서버에 인증을 검증한다</li>
+            <li>성공하면 인증 정보가 브라우저에 저장되고 다음 단계로 진행된다</li>
+            <li>실패하면 오류 메시지가 표시되고 현재 단계에 머문다</li>
+          </ol>
+
+          <h3>왜 이렇게 동작하는가</h3>
+          <ul class="design-decisions">
+            <li><strong>이중 인증 모드 지원</strong>: Cloud(SaaS)와 Server·DC(자체 호스팅)의 인증 방식이 다르므로 두 모드를 모두 지원하여 다양한 환경의 팀이 사용할 수 있다</li>
+            <li><strong>서버 무저장 원칙</strong>: 인증 정보를 서버에 보관하지 않고 매 요청마다 헤더로 전달하여 보안 리스크를 최소화한다</li>
+            <li><strong>도메인 자동 정규화</strong>: 사용자가 프로토콜이나 슬래시 형식을 정확히 몰라도 입력 편의를 제공한다</li>
+          </ul>
+
+          <h3>주요 정책</h3>
+          <ul class="related-policies">
+            <li><a href="policies.html#POL-001" class="xref">POL-001</a>: Cloud 모드에서 도메인·이메일·토큰 세 가지 필수 입력</li>
+            <li><a href="policies.html#POL-002" class="xref">POL-002</a>: Server·DC 모드에서 도메인·토큰 두 가지 필수 입력</li>
+            <li><a href="policies.html#POL-005" class="xref">POL-005</a>: 이메일 유무로 API v3/v2 및 인증 방식 자동 분기</li>
+            <li><a href="policies.html#POL-007" class="xref">POL-007</a>: 서버는 인증 정보를 보관하지 않음</li>
+          </ul>
+
+          <h3>에러 상황</h3>
+          <ul class="related-errors">
+            <li><a href="policies.html#ERR-001" class="xref">ERR-001</a>: 모든 필드를 입력해주세요 — 누락된 필드를 모두 입력한 뒤 재시도</li>
+            <li><a href="policies.html#ERR-002" class="xref">ERR-002</a>: Jira 인증 실패 — 도메인, 이메일, 토큰을 확인하고 재입력. 만료된 토큰은 재발급</li>
+            <li><a href="policies.html#ERR-003" class="xref">ERR-003</a>: Jira 연결 실패 — 네트워크 상태를 확인하고 재시도</li>
+          </ul>
+
+          <h3>관련 용어</h3>
+          <ul class="related-terms">
+            <li><a href="glossary.html#term-JiraCloud" class="xref">Jira Cloud</a>: Atlassian SaaS Jira 서비스</li>
+            <li><a href="glossary.html#term-JiraServerDC" class="xref">Jira Server·DC</a>: 자체 호스팅 Jira</li>
+            <li><a href="glossary.html#term-API토큰" class="xref">API 토큰</a>: Cloud 전용 인증 토큰</li>
+            <li><a href="glossary.html#term-PAT" class="xref">PAT</a>: Server·DC 전용 인증 토큰</li>
+          </ul>
+        </div>
+
+        <div class="spec-feature" id="feature-creds-cache">
+          <h2>인증 정보 캐싱</h2>
+
+          <h3>이 기능은 무엇인가</h3>
+          <p>인증에 성공한 Jira 접속 정보와 닉네임을 브라우저에 저장하여, 다음 방문 시 입력 폼을 자동으로 채워주는 편의 기능이다. 저장된 정보는 사용자가 언제든 삭제할 수 있다.</p>
+
+          <h3>사용자 시나리오</h3>
+          <ol class="scenario-steps">
+            <li>인증 검증이 성공하면 시스템이 인증 정보를 자동으로 브라우저에 저장한다</li>
+            <li>닉네임 입력 후 다음 단계로 진행하면 닉네임도 기존 캐시에 추가된다</li>
+            <li>다음 방문 시 저장된 정보로 폼이 자동 채워진다</li>
+            <li>사용자가 "저장된 정보 삭제" 버튼을 클릭하면 캐시가 제거되고 폼이 초기화된다</li>
+          </ol>
+
+          <h3>왜 이렇게 동작하는가</h3>
+          <ul class="design-decisions">
+            <li><strong>인증 성공 시에만 저장</strong>: 잘못된 자격증명이 캐싱되어 다음 방문에 혼란을 주지 않도록 한다</li>
+            <li><strong>닉네임 병합 저장</strong>: 인증 정보와 닉네임을 한 곳에서 관리하여 삭제 시 한번에 정리된다</li>
+            <li><strong>평문 저장</strong>: 암호화 없이 저장되므로 공용 기기에서는 삭제가 권장된다</li>
+          </ul>
+
+          <h3>주요 정책</h3>
+          <ul class="related-policies">
+            <li><a href="policies.html#POL-004" class="xref">POL-004</a>: 인증 성공 시에만 캐싱</li>
+            <li><a href="policies.html#POL-009" class="xref">POL-009</a>: 닉네임은 기존 자격증명에 병합 저장</li>
+            <li><a href="policies.html#POL-010" class="xref">POL-010</a>: 삭제 시 폼 전체 초기화</li>
+            <li><a href="policies.html#POL-011" class="xref">POL-011</a>: 인증 정보 평문 저장</li>
+          </ul>
+
+          <h3>관련 용어</h3>
+          <ul class="related-terms">
+            <li><a href="glossary.html#term-자격증명캐시" class="xref">자격증명 캐시</a>: 브라우저 로컬 저장소에 보관되는 인증 정보</li>
+          </ul>
+        </div>
+
+        <div class="spec-feature" id="feature-epic-search">
+          <h2>Epic 검색</h2>
+
+          <h3>이 기능은 무엇인가</h3>
+          <p>사용자가 입력한 Epic Key로 Jira에서 Epic을 검색하고, 해당 이슈가 실제 Epic 타입인지 검증하는 기능이다. Epic이 유효하면 자동으로 하위 이슈 목록 조회가 연속 실행된다.</p>
+
+          <h3>사용자 시나리오</h3>
+          <ol class="scenario-steps">
+            <li>사용자가 Epic Key(예: PROJ-42)를 입력한다</li>
+            <li>"검색" 버튼을 클릭하면 시스템이 Jira에서 해당 이슈를 조회한다</li>
+            <li>Epic 타입이 확인되면 Epic 정보(키, 제목)가 미리보기로 표시된다</li>
+            <li>자동으로 하위 이슈 목록 조회가 시작된다</li>
+            <li>Epic 타입이 아니면 오류 메시지가 표시된다</li>
+          </ol>
+
+          <h3>왜 이렇게 동작하는가</h3>
+          <ul class="design-decisions">
+            <li><strong>Epic 타입 강제</strong>: Planning Poker 세션의 범위를 Epic 단위로 정의하여, Story나 Task를 잘못 입력하는 실수를 방지한다</li>
+            <li><strong>3가지 이름 인식</strong>: 'epic', '에픽', '큰틀' — 다양한 Jira 설정 환경을 지원한다</li>
+            <li><strong>자동 연속 조회</strong>: Epic 확인 후 별도 버튼 없이 이슈 목록이 자동으로 불러와져 사용자의 조작 단계를 줄인다</li>
+          </ul>
+
+          <h3>주요 정책</h3>
+          <ul class="related-policies">
+            <li><a href="policies.html#POL-012" class="xref">POL-012</a>: Epic Key 미입력 시 검색 비활성</li>
+            <li><a href="policies.html#POL-013" class="xref">POL-013</a>: Epic 타입이 아니면 오류 반환</li>
+            <li><a href="policies.html#POL-014" class="xref">POL-014</a>: Epic Key 변경 시 이전 결과 자동 초기화</li>
+            <li><a href="policies.html#POL-015" class="xref">POL-015</a>: Epic 확인 성공 후 하위 이슈 자동 연속 조회</li>
+          </ul>
+
+          <h3>에러 상황</h3>
+          <ul class="related-errors">
+            <li><a href="policies.html#ERR-004" class="xref">ERR-004</a>: Epic을 찾을 수 없음 — Epic Key가 올바른지, 접근 권한이 있는지 확인</li>
+            <li><a href="policies.html#ERR-005" class="xref">ERR-005</a>: Epic 타입 불일치 — Jira에서 Epic 타입의 이슈 키를 확인하여 입력</li>
+            <li><a href="policies.html#ERR-006" class="xref">ERR-006</a>: Epic 검색 실패 — 입력값 확인 후 재시도</li>
+          </ul>
+
+          <h3>관련 용어</h3>
+          <ul class="related-terms">
+            <li><a href="glossary.html#term-Epic" class="xref">Epic</a>: Jira 이슈 계층에서 세션 범위를 정의하는 상위 단위</li>
+            <li><a href="glossary.html#term-EpicKey" class="xref">Epic Key</a>: 프로젝트 접두사와 이슈 번호로 구성된 식별자</li>
+          </ul>
+        </div>
+
+        <div class="spec-feature" id="feature-issues-fetch">
+          <h2>이슈 목록 조회</h2>
+
+          <h3>이 기능은 무엇인가</h3>
+          <p>유효한 Epic의 하위 이슈(Story, Task, Bug)를 Jira에서 가져와 포커 세션의 투표 대상으로 제공하는 기능이다. Cloud와 Server·DC의 조회 방식 차이를 자동으로 처리하며, 이슈 설명 형식도 통일된 텍스트로 변환한다.</p>
+
+          <h3>사용자 시나리오</h3>
+          <ol class="scenario-steps">
+            <li>Epic 검색이 성공하면 시스템이 자동으로 하위 이슈를 조회한다</li>
+            <li>이슈 목록(최대 100건)이 표시되며 각 이슈의 키, 제목, 기존 Story Points가 보인다</li>
+            <li>이슈가 1건 이상이면 "방 만들기" 버튼이 활성화된다</li>
+            <li>이슈가 0건이면 방 만들기가 차단된다</li>
+          </ol>
+
+          <h3>왜 이렇게 동작하는가</h3>
+          <ul class="design-decisions">
+            <li><strong>Cloud·Server 자동 분기</strong>: Cloud는 부모-자식 관계로, Server·DC는 Epic Link 필드로 하위 이슈를 조회한다. 사용자가 조회 방식을 신경 쓸 필요가 없다</li>
+            <li><strong>100건 제한</strong>: 지나치게 많은 이슈를 한 세션에 넣으면 진행이 비효율적이므로 현실적인 범위로 제한한다</li>
+            <li><strong>ADF 자동 변환</strong>: Cloud의 구조화된 문서 형식을 평문으로 변환하여 포커 테이블에서 일관된 텍스트로 표시한다</li>
+          </ul>
+
+          <h3>주요 정책</h3>
+          <ul class="related-policies">
+            <li><a href="policies.html#POL-016" class="xref">POL-016</a>: 이슈 0건이면 방 만들기 차단</li>
+            <li><a href="policies.html#POL-017" class="xref">POL-017</a>: 최대 100건 조회</li>
+            <li><a href="policies.html#POL-018" class="xref">POL-018</a>: Story Points 필드 식별 — Cloud 커스텀 필드 10016</li>
+            <li><a href="policies.html#POL-019" class="xref">POL-019</a>: Cloud·Server·DC 조회 방식 자동 분기</li>
+            <li><a href="policies.html#POL-020" class="xref">POL-020</a>: Cloud 이슈 설명 평문 자동 변환</li>
+          </ul>
+
+          <h3>에러 상황</h3>
+          <ul class="related-errors">
+            <li><a href="policies.html#ERR-007" class="xref">ERR-007</a>: 이슈 목록 조회 실패 — Jira 접근 권한을 확인</li>
+            <li><a href="policies.html#ERR-008" class="xref">ERR-008</a>: 서버 내부 오류 — 네트워크 상태와 도메인 주소를 확인하고 재시도</li>
+          </ul>
+
+          <h3>관련 용어</h3>
+          <ul class="related-terms">
+            <li><a href="glossary.html#term-스토리포인트" class="xref">Story Points</a>: 이슈의 작업 규모를 나타내는 상대적 수치</li>
+            <li><a href="glossary.html#term-ADF" class="xref">ADF</a>: Jira Cloud API v3의 구조화 문서 형식</li>
+            <li><a href="glossary.html#term-JQL" class="xref">JQL</a>: Jira 이슈 검색 쿼리 언어</li>
+          </ul>
+        </div>
+      </article>
+    </main>
+  </div>
+  <script src="../../assets/search-index.js"></script>
+  <script src="../../assets/app.js"></script>
+</body>
+</html>

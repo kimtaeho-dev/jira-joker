@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>포커 게임 기획서 — Jira Joker 비즈니스 지식</title>
+  <link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body>
+  <div class="layout">
+    <nav class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h1 class="sidebar-title">Jira Joker</h1>
+        <button class="theme-toggle" id="theme-toggle" aria-label="테마 전환">🌙</button>
+      </div>
+      <div class="search-box">
+        <input type="search" class="search-input" id="search-input" placeholder="검색..." aria-label="검색">
+        <div class="search-results" id="search-results"></div>
+      </div>
+      <ul class="nav-list">
+        <li class="nav-item">
+          <a href="../../index.html" class="nav-link">정책 카탈로그</a>
+        </li>
+        <li class="nav-item">
+          <a href="../../glossary.html" class="nav-link">전체 용어집</a>
+        </li>
+        <li class="nav-item nav-domain">
+          <button class="nav-domain-toggle" aria-expanded="false">Jira 연동</button>
+          <ul class="nav-sublist">
+            <li><a href="../../domains/jira-integration/policies.html" class="nav-link">정책서</a></li>
+            <li><a href="../../domains/jira-integration/spec.html" class="nav-link">기획서</a></li>
+            <li><a href="../../domains/jira-integration/glossary.html" class="nav-link">용어집</a></li>
+          </ul>
+        </li>
+        <li class="nav-item nav-domain">
+          <button class="nav-domain-toggle" aria-expanded="false">실시간 통신</button>
+          <ul class="nav-sublist">
+            <li><a href="../../domains/realtime-communication/policies.html" class="nav-link">정책서</a></li>
+            <li><a href="../../domains/realtime-communication/spec.html" class="nav-link">기획서</a></li>
+            <li><a href="../../domains/realtime-communication/glossary.html" class="nav-link">용어집</a></li>
+          </ul>
+        </li>
+        <li class="nav-item nav-domain">
+          <button class="nav-domain-toggle" aria-expanded="true">포커 게임</button>
+          <ul class="nav-sublist">
+            <li><a href="../../domains/poker-game/policies.html" class="nav-link">정책서</a></li>
+            <li><a href="../../domains/poker-game/spec.html" class="nav-link active">기획서</a></li>
+            <li><a href="../../domains/poker-game/glossary.html" class="nav-link">용어집</a></li>
+          </ul>
+        </li>
+      </ul>
+    </nav>
+    <button class="sidebar-toggle" id="sidebar-toggle" aria-label="메뉴 열기">☰</button>
+    <main class="content">
+      <nav class="breadcrumb" aria-label="현재 위치">
+        <a href="../../index.html" class="breadcrumb-item">홈</a>
+        <span class="breadcrumb-item">포커 게임</span>
+        <span class="breadcrumb-item">기획서</span>
+      </nav>
+      <article class="page">
+        <h1 class="page-title">포커 게임 — 기획서</h1>
+        <p class="page-meta">최종 갱신: 2026-03-29</p>
+        <p class="page-desc">Planning Poker 세션의 핵심 게임 흐름을 담당한다. 방 생성/참가, 카드 투표, 결과 공개, 티켓 진행, 세션 완료까지 전체 라이프사이클을 관리하며, 실시간 통신을 통해 참가자 간 상태를 동기화한다.</p>
+
+        <section class="spec-feature" id="feature-방_유효성_검사">
+          <h2 class="spec-feature-title">방 유효성 검사</h2>
+          <div class="spec-section">
+            <h3>이 기능은 무엇인가</h3>
+            <p>초대 링크로 방에 접근할 때 해당 방이 실제로 존재하는지 확인하고, 결과에 따라 입장 폼 또는 안내 화면을 표시하는 기능이다.</p>
+          </div>
+          <div class="spec-section">
+            <h3>사용자 시나리오</h3>
+            <ol>
+              <li>사용자가 초대 링크를 통해 방 페이지에 접근한다</li>
+              <li>브라우저에 이전 세션 정보가 있으면 재확인 없이 바로 진입한다</li>
+              <li>새로운 접근이면 서버에 방 존재 여부를 확인한다</li>
+              <li>방이 있으면 이름 입력 폼이, 없으면 "방을 찾을 수 없습니다" 화면이 표시된다</li>
+            </ol>
+          </div>
+          <div class="spec-section">
+            <h3>왜 이렇게 동작하는가</h3>
+            <ul>
+              <li><strong>기존 사용자 즉시 진입</strong>: 새로고침한 사용자가 불필요하게 입장 폼을 다시 거치지 않도록 한다</li>
+              <li><strong>상태 복원 대기</strong>: 브라우저 세션 스토리지 복원이 완료되기 전 검사를 시작하면 잘못된 판단이 발생할 수 있다</li>
+            </ul>
+          </div>
+          <div class="spec-section">
+            <h3>주요 정책</h3>
+            <ul class="xref-list">
+              <li><a href="../../domains/poker-game/policies.html#POL-001" class="xref">POL-001</a> 신규 접근자는 서버에서 방 존재 여부 확인</li>
+              <li><a href="../../domains/poker-game/policies.html#POL-002" class="xref">POL-002</a> 이미 입장한 사용자는 서버 재확인 생략</li>
+              <li><a href="../../domains/poker-game/policies.html#POL-003" class="xref">POL-003</a> 상태 복원 완료 전 방 검사 수행 금지</li>
+            </ul>
+          </div>
+          <div class="spec-section">
+            <h3>에러 상황</h3>
+            <ul class="xref-list">
+              <li><a href="../../domains/poker-game/policies.html#ERR-003" class="xref">ERR-003</a> 방을 찾을 수 없음 — 홈으로 돌아가 새 방을 생성하거나 유효한 링크 요청</li>
+            </ul>
+          </div>
+          <div class="spec-section">
+            <h3>관련 용어</h3>
+            <ul class="xref-list">
+              <li><a href="../../domains/poker-game/glossary.html#term-방" class="xref">방</a> Planning Poker 세션이 진행되는 가상 공간</li>
+              <li><a href="../../domains/poker-game/glossary.html#term-세션스토리지" class="xref">세션 스토리지</a> 브라우저 탭 단위 게임 상태 저장 공간</li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="spec-feature" id="feature-방_입장_참가자">
+          <h2 class="spec-feature-title">방 입장 (참가자)</h2>
+          <div class="spec-section">
+            <h3>이 기능은 무엇인가</h3>
+            <p>초대 링크로 방에 접근한 신규 참가자가 이름을 입력하고 방에 참가하는 기능이다. 최근 입력한 이름은 자동으로 캐싱된다.</p>
+          </div>
+          <div class="spec-section">
+            <h3>사용자 시나리오</h3>
+            <ol>
+              <li>방이 유효하면 이름 입력 폼이 표시된다</li>
+              <li>이전에 입력한 이름이 있으면 자동으로 채워진다</li>
+              <li>이름을 입력하고 "참여하기" 버튼을 클릭한다</li>
+              <li>방에 입장하고 실시간 연결이 시작된다</li>
+            </ol>
+          </div>
+          <div class="spec-section">
+            <h3>왜 이렇게 동작하는가</h3>
+            <ul>
+              <li><strong>이름 필수</strong>: 참가자를 구별할 수 있는 최소 식별 정보이자, 호스트 재접속 시 이름 매칭의 기반이다</li>
+              <li><strong>공백 자동 제거</strong>: 실수로 추가된 공백이 이름 매칭에 영향을 주지 않도록 한다</li>
+              <li><strong>중복 등록 방지</strong>: SSE와 WebRTC 콜백이 동시에 도착할 때 같은 참가자가 두 번 표시되지 않도록 한다</li>
+            </ul>
+          </div>
+          <div class="spec-section">
+            <h3>주요 정책</h3>
+            <ul class="xref-list">
+              <li><a href="../../domains/poker-game/policies.html#POL-004" class="xref">POL-004</a> 이름 공백 입력 차단</li>
+              <li><a href="../../domains/poker-game/policies.html#POL-005" class="xref">POL-005</a> 이름 앞뒤 공백 자동 제거</li>
+              <li><a href="../../domains/poker-game/policies.html#POL-006" class="xref">POL-006</a> 최근 입력 이름 자동 캐싱</li>
+              <li><a href="../../domains/poker-game/policies.html#POL-007" class="xref">POL-007</a> 동일 참가자 중복 등록 방지</li>
+            </ul>
+          </div>
+          <div class="spec-section">
+            <h3>관련 용어</h3>
+            <ul class="xref-list">
+              <li><a href="../../domains/poker-game/glossary.html#term-참가자" class="xref">참가자</a> Planning Poker 방에 입장한 모든 사용자</li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="spec-feature" id="feature-방_대기_화면">
+          <h2 class="spec-feature-title">방 대기 화면</h2>
+          <div class="spec-section">
+            <h3>이 기능은 무엇인가</h3>
+            <p>참가자가 2명 미만일 때 게임을 시작하지 않고 대기 화면을 표시하는 기능이다. 호스트에게는 초대 링크를, 참가자에게는 연결 대기 안내를 보여준다.</p>
+          </div>
+          <div class="spec-section">
+            <h3>사용자 시나리오</h3>
+            <ol>
+              <li>호스트가 방을 만들면 대기 화면이 표시된다</li>
+              <li>호스트에게 초대 링크 복사 UI가 표시된다</li>
+              <li>참가자가 들어오면 연결 대기 안내가 표시된다</li>
+              <li>총 인원이 2명 이상이 되면 자동으로 게임 화면으로 전환된다</li>
+            </ol>
+          </div>
+          <div class="spec-section">
+            <h3>왜 이렇게 동작하는가</h3>
+            <ul>
+              <li><strong>최소 2인</strong>: Planning Poker는 팀 합의가 목적이므로 혼자서는 의미 있는 추정이 불가능하다</li>
+            </ul>
+          </div>
+          <div class="spec-section">
+            <h3>주요 정책</h3>
+            <ul class="xref-list">
+              <li><a href="../../domains/poker-game/policies.html#POL-008" class="xref">POL-008</a> 2인 미만 시 게임 진행 차단</li>
+              <li><a href="../../domains/poker-game/policies.html#POL-009" class="xref">POL-009</a> 호스트와 참가자에게 다른 대기 화면 표시</li>
+            </ul>
+          </div>
+          <div class="spec-section">
+            <h3>관련 용어</h3>
+            <ul class="xref-list">
+              <li><a href="../../domains/poker-game/glossary.html#term-대기화면" class="xref">대기 화면</a> 인원 부족 시 표시되는 화면</li>
+              <li><a href="../../domains/poker-game/glossary.html#term-호스트" class="xref">호스트</a> 방을 생성한 참가자</li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="spec-feature" id="feature-카드_선택">
+          <h2 class="spec-feature-title">카드 선택 (투표)</h2>
+          <div class="spec-section">
+            <h3>이 기능은 무엇인가</h3>
+            <p>참가자가 Fibonacci 수열 + 특수값으로 구성된 카드 덱에서 추정값을 선택하는 기능이다. 선택 즉시 다른 참가자에게 투표 완료가 알려지지만, 실제 값은 공개 전까지 숨겨진다.</p>
+          </div>
+          <div class="spec-section">
+            <h3>사용자 시나리오</h3>
+            <ol>
+              <li>화면 하단에 9장의 카드(1, 2, 3, 5, 8, 13, 21, ?, ☕)가 표시된다</li>
+              <li>카드를 클릭하면 선택이 완료되고 다른 참가자에게 알려진다</li>
+              <li>다른 카드를 클릭하면 변경할 수 있다</li>
+              <li>모든 참가자의 좌석에 투표 완료 여부가 표시된다</li>
+            </ol>
+          </div>
+          <div class="spec-section">
+            <h3>왜 이렇게 동작하는가</h3>
+            <ul>
+              <li><strong>Fibonacci 수열</strong>: 숫자 간 격차가 커질수록 불확실성이 반영되어 상대적 크기 추정에 적합하다</li>
+              <li><strong>특수값 '?', '☕'</strong>: 추정이 불가능하거나 논의가 더 필요한 상황을 표현한다</li>
+              <li><strong>공개 전 비공개</strong>: 다른 참가자의 투표에 영향을 받지 않는 독립적 추정을 보장한다</li>
+            </ul>
+          </div>
+          <div class="spec-section">
+            <h3>주요 정책</h3>
+            <ul class="xref-list">
+              <li><a href="../../domains/poker-game/policies.html#POL-010" class="xref">POL-010</a> 카드 덱 구성 Fibonacci + 특수값 9장 고정</li>
+              <li><a href="../../domains/poker-game/policies.html#POL-011" class="xref">POL-011</a> 투표 공개 이후 카드 선택 불가</li>
+            </ul>
+          </div>
+          <div class="spec-section">
+            <h3>관련 용어</h3>
+            <ul class="xref-list">
+              <li><a href="../../domains/poker-game/glossary.html#term-카드덱" class="xref">카드 덱</a> 투표에 사용할 수 있는 카드 모음</li>
+              <li><a href="../../domains/poker-game/glossary.html#term-Fibonacci" class="xref">Fibonacci 수열</a> 카드 덱의 숫자 기반</li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="spec-feature" id="feature-투표_공개">
+          <h2 class="spec-feature-title">투표 공개</h2>
+          <div class="spec-section">
+            <h3>이 기능은 무엇인가</h3>
+            <p>모든 참가자가 카드를 선택하면 2초 카운트다운 후 자동으로 모든 투표값을 동시에 공개하는 기능이다.</p>
+          </div>
+          <div class="spec-section">
+            <h3>사용자 시나리오</h3>
+            <ol>
+              <li>마지막 참가자가 카드를 선택한다</li>
+              <li>포커 테이블 중앙에 2초 카운트다운이 표시된다</li>
+              <li>0에 도달하면 모든 참가자의 투표값이 동시에 공개된다</li>
+              <li>Mode(최빈값)와 Average(평균)가 테이블 중앙에 표시된다</li>
+            </ol>
+          </div>
+          <div class="spec-section">
+            <h3>왜 이렇게 동작하는가</h3>
+            <ul>
+              <li><strong>자동 공개</strong>: 호스트가 별도로 공개 버튼을 누르지 않아도 전원 투표 완료 시 자동 진행된다</li>
+              <li><strong>2초 카운트다운</strong>: 참가자가 공개 시점을 인지하고 준비할 수 있는 시간을 제공한다</li>
+              <li><strong>카운트다운 취소</strong>: 진행 중 참가자가 이탈하면 조건 미충족으로 취소되어 불완전한 결과 공개를 방지한다</li>
+            </ul>
+          </div>
+          <div class="spec-section">
+            <h3>주요 정책</h3>
+            <ul class="xref-list">
+              <li><a href="../../domains/poker-game/policies.html#POL-012" class="xref">POL-012</a> 전원 투표 완료 및 2인 이상 시 자동 공개 시작</li>
+              <li><a href="../../domains/poker-game/policies.html#POL-013" class="xref">POL-013</a> 카운트다운 중 조건 미충족 시 취소</li>
+              <li><a href="../../domains/poker-game/policies.html#POL-014" class="xref">POL-014</a> 전원 투표 완료 후 2초 카운트다운</li>
+              <li><a href="../../domains/poker-game/policies.html#POL-015" class="xref">POL-015</a> 투표값 없을 시 '?'로 공개</li>
+            </ul>
+          </div>
+          <div class="spec-section">
+            <h3>관련 용어</h3>
+            <ul class="xref-list">
+              <li><a href="../../domains/poker-game/glossary.html#term-결과공개" class="xref">결과 공개</a> 투표값을 동시에 보이게 전환하는 동작</li>
+              <li><a href="../../domains/poker-game/glossary.html#term-투표단계" class="xref">투표 단계</a> 투표 중 / 공개됨 두 가지 상태</li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="spec-feature" id="feature-결과_표시">
+          <h2 class="spec-feature-title">결과 표시</h2>
+          <div class="spec-section">
+            <h3>이 기능은 무엇인가</h3>
+            <p>투표가 공개되면 Mode(최빈값)와 Average(숫자 평균)를 계산하여 표시하고, 호스트에게 다음 행동(재투표 또는 다음 티켓)을 선택할 수 있는 컨트롤을 제공하는 기능이다.</p>
+          </div>
+          <div class="spec-section">
+            <h3>사용자 시나리오</h3>
+            <ol>
+              <li>투표가 공개되면 각 참가자 좌석에 선택한 값이 표시된다</li>
+              <li>테이블 중앙에 Mode와 Average가 표시된다</li>
+              <li>호스트에게 Re-vote와 Next 버튼이 표시된다</li>
+              <li>일반 참가자에게는 "호스트만 진행 가능" 안내가 표시된다</li>
+              <li>마지막 티켓에서는 Next 대신 "All Done" 텍스트가 표시된다</li>
+            </ol>
+          </div>
+          <div class="spec-section">
+            <h3>왜 이렇게 동작하는가</h3>
+            <ul>
+              <li><strong>호스트 전용 컨트롤</strong>: 라운드 진행 결정권을 호스트에게 집중시켜 게임 흐름의 일관성을 유지한다</li>
+              <li><strong>Mode 우선</strong>: 팀의 공통 의견을 대표하는 값으로 스토리 포인트 결정 기준에 적합하다</li>
+              <li><strong>숫자만 Average</strong>: '?'와 '☕'를 평균에서 제외하여 의미 있는 수치만 집계한다</li>
+            </ul>
+          </div>
+          <div class="spec-section">
+            <h3>주요 정책</h3>
+            <ul class="xref-list">
+              <li><a href="../../domains/poker-game/policies.html#POL-016" class="xref">POL-016</a> Mode 계산 — 동점 시 최초 최빈값 우선</li>
+              <li><a href="../../domains/poker-game/policies.html#POL-017" class="xref">POL-017</a> Average 계산 — 숫자 투표만 포함</li>
+              <li><a href="../../domains/poker-game/policies.html#POL-018" class="xref">POL-018</a> 결과 화면 컨트롤은 호스트 전용</li>
+              <li><a href="../../domains/poker-game/policies.html#POL-019" class="xref">POL-019</a> 마지막 티켓에서는 Next 버튼 미표시</li>
+            </ul>
+          </div>
+          <div class="spec-section">
+            <h3>관련 용어</h3>
+            <ul class="xref-list">
+              <li><a href="../../domains/poker-game/glossary.html#term-모드" class="xref">모드</a> 가장 많이 선택된 투표값</li>
+              <li><a href="../../domains/poker-game/glossary.html#term-평균" class="xref">평균</a> 숫자 투표값의 산술 평균</li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="spec-feature" id="feature-재투표">
+          <h2 class="spec-feature-title">재투표</h2>
+          <div class="spec-section">
+            <h3>이 기능은 무엇인가</h3>
+            <p>호스트가 현재 티켓에 대한 투표를 초기화하여 다시 투표할 수 있도록 하는 기능이다. 이전 티켓의 결과에는 영향을 주지 않는다.</p>
+          </div>
+          <div class="spec-section">
+            <h3>사용자 시나리오</h3>
+            <ol>
+              <li>결과 공개 후 팀이 충분한 토론이 필요하다고 판단한다</li>
+              <li>호스트가 Re-vote 버튼을 클릭한다</li>
+              <li>모든 참가자의 투표가 초기화되고 카드덱이 다시 활성화된다</li>
+              <li>참가자들이 다시 카드를 선택한다</li>
+            </ol>
+          </div>
+          <div class="spec-section">
+            <h3>왜 이렇게 동작하는가</h3>
+            <ul>
+              <li><strong>현재 라운드만 초기화</strong>: 재투표는 현재 티켓의 투표만 초기화하며, 이미 완료된 이전 티켓의 결과는 보존된다</li>
+              <li><strong>완료 미기록</strong>: 재투표로 이동한 라운드의 이전 결과는 히스토리에 기록되지 않는다</li>
+            </ul>
+          </div>
+          <div class="spec-section">
+            <h3>주요 정책</h3>
+            <ul class="xref-list">
+              <li><a href="../../domains/poker-game/policies.html#POL-020" class="xref">POL-020</a> 재투표 시 현재 라운드만 초기화, 완료 이력 보존</li>
+              <li><a href="../../domains/poker-game/policies.html#POL-021" class="xref">POL-021</a> 재투표는 호스트만 실행 가능</li>
+            </ul>
+          </div>
+          <div class="spec-section">
+            <h3>관련 용어</h3>
+            <ul class="xref-list">
+              <li><a href="../../domains/poker-game/glossary.html#term-재투표" class="xref">재투표</a> 현재 티켓 투표를 초기화하는 동작</li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="spec-feature" id="feature-다음_티켓_이동">
+          <h2 class="spec-feature-title">다음 티켓 이동</h2>
+          <div class="spec-section">
+            <h3>이 기능은 무엇인가</h3>
+            <p>현재 티켓의 투표 결과를 스냅샷으로 기록하고 다음 티켓으로 진행하는 기능이다. 결과 기록 후 투표 상태가 초기화되어 새로운 라운드가 시작된다.</p>
+          </div>
+          <div class="spec-section">
+            <h3>사용자 시나리오</h3>
+            <ol>
+              <li>결과 공개 후 호스트가 Next 버튼을 클릭한다</li>
+              <li>현재 티켓의 투표 결과(참가자별 투표, Mode, Average)가 히스토리에 기록된다</li>
+              <li>다음 티켓이 표시되고 투표 상태가 초기화된다</li>
+              <li>참가자들이 새 티켓에 대해 카드를 선택한다</li>
+            </ol>
+          </div>
+          <div class="spec-section">
+            <h3>왜 이렇게 동작하는가</h3>
+            <ul>
+              <li><strong>불변 스냅샷</strong>: 완료된 티켓의 결과는 한 번 기록되면 수정되지 않는다</li>
+              <li><strong>계산 순서 보장</strong>: Mode와 Average를 참가자 상태 초기화 전에 계산하여 빈 결과가 저장되지 않도록 한다</li>
+            </ul>
+          </div>
+          <div class="spec-section">
+            <h3>주요 정책</h3>
+            <ul class="xref-list">
+              <li><a href="../../domains/poker-game/policies.html#POL-022" class="xref">POL-022</a> 다음 티켓 이동 시 현재 결과를 불변 스냅샷으로 기록</li>
+              <li><a href="../../domains/poker-game/policies.html#POL-023" class="xref">POL-023</a> 결과 계산 순서 보장</li>
+              <li><a href="../../domains/poker-game/policies.html#POL-024" class="xref">POL-024</a> 다음 티켓 이동은 호스트 전용</li>
+            </ul>
+          </div>
+          <div class="spec-section">
+            <h3>관련 용어</h3>
+            <ul class="xref-list">
+              <li><a href="../../domains/poker-game/glossary.html#term-완료티켓" class="xref">완료 티켓</a> 투표 완료 후 생성되는 불변 결과 스냅샷</li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="spec-feature" id="feature-세션_완료">
+          <h2 class="spec-feature-title">세션 완료</h2>
+          <div class="spec-section">
+            <h3>이 기능은 무엇인가</h3>
+            <p>모든 티켓의 추정이 완료되면 세션 요약 화면을 표시하는 기능이다. 각 티켓의 Mode, Average와 총 스토리 포인트 합계를 보여준다.</p>
+          </div>
+          <div class="spec-section">
+            <h3>사용자 시나리오</h3>
+            <ol>
+              <li>마지막 티켓에 대해 Next를 실행한다</li>
+              <li>세션 완료 화면이 표시된다</li>
+              <li>완료된 티켓 목록과 각 결과(Mode, Average)가 테이블로 표시된다</li>
+              <li>총 스토리 포인트 합계가 표시된다</li>
+              <li>"세션 종료" 버튼을 클릭하면 게임 상태가 초기화되고 홈으로 이동한다</li>
+            </ol>
+          </div>
+          <div class="spec-section">
+            <h3>왜 이렇게 동작하는가</h3>
+            <ul>
+              <li><strong>비숫자 Mode는 0</strong>: '?' 등으로 결정된 티켓은 합계에서 제외하되 총합 계산 자체는 유지한다</li>
+              <li><strong>완전 초기화</strong>: 세션 종료 시 이전 세션 데이터가 남아 다음 세션에 간섭하지 않도록 정리한다</li>
+            </ul>
+          </div>
+          <div class="spec-section">
+            <h3>주요 정책</h3>
+            <ul class="xref-list">
+              <li><a href="../../domains/poker-game/policies.html#POL-025" class="xref">POL-025</a> 마지막 티켓 완료 후 세션 완료 화면 전환</li>
+              <li><a href="../../domains/poker-game/policies.html#POL-026" class="xref">POL-026</a> 총 스토리 포인트 — 비숫자 Mode는 0 처리</li>
+              <li><a href="../../domains/poker-game/policies.html#POL-027" class="xref">POL-027</a> 세션 종료 시 로컬 상태 전체 초기화</li>
+            </ul>
+          </div>
+          <div class="spec-section">
+            <h3>관련 용어</h3>
+            <ul class="xref-list">
+              <li><a href="../../domains/poker-game/glossary.html#term-세션" class="xref">세션</a> 전체 Planning Poker 진행 과정</li>
+              <li><a href="../../domains/poker-game/glossary.html#term-스토리포인트" class="xref">스토리 포인트</a> 이슈의 상대적 작업량 추정 단위</li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="spec-feature" id="feature-티켓_패널">
+          <h2 class="spec-feature-title">티켓 패널</h2>
+          <div class="spec-section">
+            <h3>이 기능은 무엇인가</h3>
+            <p>화면 우측에 현재 진행 중인 티켓의 상세 정보와 이전 완료 티켓 히스토리를 표시하는 패널이다. 토글 버튼으로 열고 닫을 수 있다.</p>
+          </div>
+          <div class="spec-section">
+            <h3>사용자 시나리오</h3>
+            <ol>
+              <li>게임 진행 중 우측 토글 버튼을 클릭하면 패널이 열린다</li>
+              <li>현재 티켓의 키, 제목, 설명, 담당자, 우선순위가 표시된다</li>
+              <li>아래에 완료된 티켓의 결과 히스토리가 표시된다</li>
+              <li>모바일에서는 오버레이로 표시되며 배경 클릭 시 닫힌다</li>
+            </ol>
+          </div>
+          <div class="spec-section">
+            <h3>왜 이렇게 동작하는가</h3>
+            <ul>
+              <li><strong>티켓 없으면 미표시</strong>: 표시할 내용이 없으면 패널 자체를 렌더링하지 않는다</li>
+            </ul>
+          </div>
+          <div class="spec-section">
+            <h3>주요 정책</h3>
+            <ul class="xref-list">
+              <li><a href="../../domains/poker-game/policies.html#POL-028" class="xref">POL-028</a> 티켓이 없으면 패널 미렌더링</li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="spec-feature" id="feature-참가자_추방">
+          <h2 class="spec-feature-title">참가자 추방</h2>
+          <div class="spec-section">
+            <h3>이 기능은 무엇인가</h3>
+            <p>호스트가 응답이 없거나 문제가 있는 참가자를 방에서 강제로 내보내는 기능이다.</p>
+          </div>
+          <div class="spec-section">
+            <h3>사용자 시나리오</h3>
+            <ol>
+              <li>포커 테이블에서 참가자 좌석에 마우스를 올린다</li>
+              <li>호스트에게만 추방 버튼이 표시된다 (자기 자신 제외)</li>
+              <li>추방 버튼을 클릭하면 해당 참가자에게 추방 메시지가 전달된다</li>
+              <li>추방된 참가자에게 "방에서 추방되었습니다" 화면이 표시된다</li>
+            </ol>
+          </div>
+          <div class="spec-section">
+            <h3>왜 이렇게 동작하는가</h3>
+            <ul>
+              <li><strong>호스트 전용</strong>: 게임 진행 통제권을 호스트에게 부여한다</li>
+              <li><strong>자기 추방 방지</strong>: 실수로 자기 자신을 추방하는 상황을 방지한다</li>
+            </ul>
+          </div>
+          <div class="spec-section">
+            <h3>주요 정책</h3>
+            <ul class="xref-list">
+              <li><a href="../../domains/poker-game/policies.html#POL-029" class="xref">POL-029</a> 추방은 호스트만 가능, 자기 자신 제외</li>
+            </ul>
+          </div>
+          <div class="spec-section">
+            <h3>에러 상황</h3>
+            <ul class="xref-list">
+              <li><a href="../../domains/poker-game/policies.html#ERR-001" class="xref">ERR-001</a> 방에서 추방됨 — "홈으로 돌아가기" 버튼으로 새 방에 참가 가능</li>
+            </ul>
+          </div>
+          <div class="spec-section">
+            <h3>관련 용어</h3>
+            <ul class="xref-list">
+              <li><a href="../../domains/poker-game/glossary.html#term-추방" class="xref">추방</a> 호스트가 참가자를 강제 퇴장시키는 동작</li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="spec-feature" id="feature-방_종료_및_이탈">
+          <h2 class="spec-feature-title">방 종료 및 이탈</h2>
+          <div class="spec-section">
+            <h3>이 기능은 무엇인가</h3>
+            <p>호스트의 방 종료와 일반 참가자의 이탈을 처리하는 기능이다. 호스트가 방을 종료하면 모든 참가자의 연결이 끊기고, 개별 참가자의 이탈은 나머지 참가자에게 알린다.</p>
+          </div>
+          <div class="spec-section">
+            <h3>사용자 시나리오</h3>
+            <ol>
+              <li>호스트가 "나가기" 버튼을 클릭하면 확인 다이얼로그가 표시된다</li>
+              <li>확인 시 모든 참가자에게 방 종료 알림이 전달된다</li>
+              <li>일반 참가자가 "나가기" 버튼을 클릭하면 즉시 이탈한다</li>
+              <li>브라우저를 직접 닫아도 서버와 P2P 양쪽으로 이탈이 알려진다</li>
+            </ol>
+          </div>
+          <div class="spec-section">
+            <h3>왜 이렇게 동작하는가</h3>
+            <ul>
+              <li><strong>호스트 확인 다이얼로그</strong>: 실수로 세션을 종료하는 것을 방지한다</li>
+              <li><strong>이중 경로 이탈 알림</strong>: 비동기 API 호출이 취소될 수 있는 브라우저 종료 시나리오에서도 이탈 감지를 보장한다</li>
+            </ul>
+          </div>
+          <div class="spec-section">
+            <h3>주요 정책</h3>
+            <ul class="xref-list">
+              <li><a href="../../domains/poker-game/policies.html#POL-030" class="xref">POL-030</a> 호스트 방 종료 전 확인 다이얼로그</li>
+              <li><a href="../../domains/poker-game/policies.html#POL-031" class="xref">POL-031</a> 호스트 방 종료 시 모든 참가자 연결 종료</li>
+              <li><a href="../../domains/poker-game/policies.html#POL-032" class="xref">POL-032</a> 탭 닫힘 시 서버와 P2P 양쪽으로 이탈 알림</li>
+            </ul>
+          </div>
+          <div class="spec-section">
+            <h3>에러 상황</h3>
+            <ul class="xref-list">
+              <li><a href="../../domains/poker-game/policies.html#ERR-002" class="xref">ERR-002</a> 방이 종료됨 — "홈으로 돌아가기" 버튼으로 새 방에 참가 가능</li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="spec-feature" id="feature-호스트_재접속">
+          <h2 class="spec-feature-title">호스트 재접속</h2>
+          <div class="spec-section">
+            <h3>이 기능은 무엇인가</h3>
+            <p>호스트가 이탈한 후 같은 이름으로 재접속하면 자동으로 호스트 권한이 복원되는 기능이다. 호스트 부재 중 참가자에게는 대기 오버레이가 표시된다.</p>
+          </div>
+          <div class="spec-section">
+            <h3>사용자 시나리오</h3>
+            <ol>
+              <li>호스트가 실수로 탭을 닫는다</li>
+              <li>나머지 참가자에게 "호스트 재접속 대기 중" 오버레이가 표시된다</li>
+              <li>호스트가 같은 초대 링크로 재접속하고 동일한 이름으로 입장한다</li>
+              <li>자동으로 호스트 권한이 복원되고 모든 참가자에게 알려진다</li>
+              <li>대기 오버레이가 사라지고 게임이 재개된다</li>
+            </ol>
+          </div>
+          <div class="spec-section">
+            <h3>왜 이렇게 동작하는가</h3>
+            <ul>
+              <li><strong>이름 완전 일치</strong>: 별도의 인증 없이 이름만으로 호스트를 식별하는 간단한 방식이다. 같은 이름의 다른 사람이 먼저 입장하면 호스트가 될 수 있는 한계가 있다</li>
+              <li><strong>500ms 지연</strong>: P2P DataChannel이 완전히 열리기 전에 메시지가 유실되는 것을 방지하는 안전 마진이다</li>
+              <li><strong>무기한 대기</strong>: 호스트 재접속 타임아웃 없이 무기한 대기하되, 참가자가 원하면 홈으로 이탈할 수 있다</li>
+            </ul>
+          </div>
+          <div class="spec-section">
+            <h3>주요 정책</h3>
+            <ul class="xref-list">
+              <li><a href="../../domains/poker-game/policies.html#POL-033" class="xref">POL-033</a> 호스트 이탈 시 무기한 대기 오버레이 표시</li>
+              <li><a href="../../domains/poker-game/policies.html#POL-034" class="xref">POL-034</a> 이름 완전 일치로 호스트 권한 자동 복원</li>
+              <li><a href="../../domains/poker-game/policies.html#POL-035" class="xref">POL-035</a> 호스트 복원 브로드캐스트 500ms 지연 전송</li>
+            </ul>
+          </div>
+          <div class="spec-section">
+            <h3>관련 용어</h3>
+            <ul class="xref-list">
+              <li><a href="../../domains/poker-game/glossary.html#term-호스트재접속" class="xref">호스트 재접속</a> 이름 매칭으로 호스트 권한을 복원하는 기능</li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="spec-feature" id="feature-P2P_연결_및_릴레이">
+          <h2 class="spec-feature-title">P2P 연결 및 릴레이</h2>
+          <div class="spec-section">
+            <h3>이 기능은 무엇인가</h3>
+            <p>참가자 간 게임 메시지를 전달하기 위한 통신 경로를 수립하는 기능이다. 우선 P2P 직접 연결을 시도하고, 실패하면 서버 릴레이로 자동 전환한다. 신규 참가자는 입장 시 기존 게임 상태를 동기화받는다.</p>
+          </div>
+          <div class="spec-section">
+            <h3>사용자 시나리오</h3>
+            <ol>
+              <li>방에 입장하면 다른 참가자와 P2P 연결을 시도한다</li>
+              <li>8초 이내에 연결되면 P2P 모드로 동작한다</li>
+              <li>연결에 실패하면 서버 릴레이 모드로 자동 전환된다</li>
+              <li>신규 참가자는 입장 직후 현재 게임 상태를 동기화받는다</li>
+            </ol>
+          </div>
+          <div class="spec-section">
+            <h3>왜 이렇게 동작하는가</h3>
+            <ul>
+              <li><strong>릴레이 자동 전환</strong>: 방화벽이나 NAT 환경에서 P2P가 불가능해도 게임이 진행된다</li>
+              <li><strong>신규 참가자만 동기화 요청</strong>: 기존 참가자가 요청하면 빈 상태 응답이 돌아올 수 있다</li>
+              <li><strong>자신의 투표 유지</strong>: 동기화 시 자신의 투표 상태가 덮어씌워지지 않는다</li>
+            </ul>
+          </div>
+          <div class="spec-section">
+            <h3>주요 정책</h3>
+            <ul class="xref-list">
+              <li><a href="../../domains/poker-game/policies.html#POL-036" class="xref">POL-036</a> P2P 실패 시 서버 릴레이 자동 전환, 비가역</li>
+              <li><a href="../../domains/poker-game/policies.html#POL-037" class="xref">POL-037</a> P2P 연결 폴백 대기 시간 8초</li>
+              <li><a href="../../domains/poker-game/policies.html#POL-038" class="xref">POL-038</a> 신규 참가자만 상태 동기화 요청</li>
+              <li><a href="../../domains/poker-game/policies.html#POL-039" class="xref">POL-039</a> 동기화 수신 시 자신의 투표 상태 유지</li>
+            </ul>
+          </div>
+          <div class="spec-section">
+            <h3>관련 용어</h3>
+            <ul class="xref-list">
+              <li><a href="../../domains/poker-game/glossary.html#term-P2P모드" class="xref">P2P 모드</a> WebRTC DataChannel 직접 전송 방식</li>
+              <li><a href="../../domains/poker-game/glossary.html#term-릴레이모드" class="xref">릴레이 모드</a> 서버 경유 메시지 전달 방식</li>
+              <li><a href="../../domains/poker-game/glossary.html#term-동기화상태" class="xref">동기화 상태</a> 신규 참가자가 받는 전체 게임 상태 페이로드</li>
+            </ul>
+          </div>
+        </section>
+      </article>
+    </main>
+  </div>
+  <script src="../../assets/search-index.js"></script>
+  <script src="../../assets/app.js"></script>
+</body>
+</html>

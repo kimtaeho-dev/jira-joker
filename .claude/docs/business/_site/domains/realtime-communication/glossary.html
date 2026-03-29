@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>실시간 통신 용어집 — Jira Joker 비즈니스 지식</title>
+  <link rel="stylesheet" href="../../assets/style.css">
+</head>
+<body>
+  <div class="layout">
+    <nav class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h1 class="sidebar-title">Jira Joker</h1>
+        <button class="theme-toggle" id="theme-toggle" aria-label="테마 전환">🌙</button>
+      </div>
+      <div class="search-box">
+        <input type="search" class="search-input" id="search-input" placeholder="검색..." aria-label="검색">
+        <div class="search-results" id="search-results"></div>
+      </div>
+      <ul class="nav-list">
+        <li class="nav-item">
+          <a href="../../index.html" class="nav-link">정책 카탈로그</a>
+        </li>
+        <li class="nav-item">
+          <a href="../../glossary.html" class="nav-link">전체 용어집</a>
+        </li>
+        <li class="nav-item nav-domain">
+          <button class="nav-domain-toggle" aria-expanded="false">Jira 연동</button>
+          <ul class="nav-sublist">
+            <li><a href="../../domains/jira-integration/policies.html" class="nav-link">정책서</a></li>
+            <li><a href="../../domains/jira-integration/spec.html" class="nav-link">기획서</a></li>
+            <li><a href="../../domains/jira-integration/glossary.html" class="nav-link">용어집</a></li>
+          </ul>
+        </li>
+        <li class="nav-item nav-domain">
+          <button class="nav-domain-toggle" aria-expanded="true">실시간 통신</button>
+          <ul class="nav-sublist">
+            <li><a href="../../domains/realtime-communication/policies.html" class="nav-link">정책서</a></li>
+            <li><a href="../../domains/realtime-communication/spec.html" class="nav-link">기획서</a></li>
+            <li><a href="../../domains/realtime-communication/glossary.html" class="nav-link active">용어집</a></li>
+          </ul>
+        </li>
+        <li class="nav-item nav-domain">
+          <button class="nav-domain-toggle" aria-expanded="false">포커 게임</button>
+          <ul class="nav-sublist">
+            <li><a href="../../domains/poker-game/policies.html" class="nav-link">정책서</a></li>
+            <li><a href="../../domains/poker-game/spec.html" class="nav-link">기획서</a></li>
+            <li><a href="../../domains/poker-game/glossary.html" class="nav-link">용어집</a></li>
+          </ul>
+        </li>
+      </ul>
+    </nav>
+    <button class="sidebar-toggle" id="sidebar-toggle" aria-label="메뉴 열기">☰</button>
+    <main class="content">
+      <nav class="breadcrumb" aria-label="현재 위치">
+        <a href="../../index.html" class="breadcrumb-item">홈</a>
+        <span class="breadcrumb-item">실시간 통신</span>
+        <span class="breadcrumb-item">용어집</span>
+      </nav>
+      <article class="page">
+        <h1 class="page-title">실시간 통신 — 용어집</h1>
+        <p class="page-meta">최종 갱신: 2026-03-29</p>
+
+        <div class="term-entry" id="term-게임메시지">
+          <h3 class="term-name">게임 메시지</h3>
+          <dl class="term-fields">
+            <dt>정의</dt>
+            <dd>게임 상태 변경을 참가자 간에 전달하는 데이터 단위. voted(투표 완료), reveal(투표 공개), reset(재투표), next(다음 티켓), sync_request(상태 요청), sync_response(상태 응답), room_closed(방 종료), kick(강퇴), host_migrated(호스트 이전), leaving(자발적 퇴장) 유형을 포함한다.</dd>
+            <dt>혼동 주의</dt>
+            <dd>시그널링 메시지(Offer/Answer/ICE)와 구별된다. 시그널링 메시지는 P2P 연결 수립에만 사용되고, 게임 메시지는 연결 수립 후 게임 진행에 사용된다.</dd>
+            <dt>예시</dt>
+            <dd>참가자가 카드를 선택하면 voted 메시지가 전송되어 다른 참가자의 화면에 투표 완료 표시가 나타난다.</dd>
+          </dl>
+        </div>
+
+        <div class="term-entry" id="term-브로드캐스트">
+          <h3 class="term-name">브로드캐스트</h3>
+          <dl class="term-fields">
+            <dt>정의</dt>
+            <dd>방에 있는 특정 참가자를 제외한 나머지 전원에게 메시지를 전달하는 전송 방식. 서버 릴레이에서는 발신자를 제외한 전원이 수신한다.</dd>
+            <dt>혼동 주의</dt>
+            <dd>특정 피어 전송과 구별된다. sync_response처럼 특정 참가자에게만 전달해야 하는 메시지는 브로드캐스트 대신 개별 전송을 사용한다.</dd>
+            <dt>예시</dt>
+            <dd>호스트가 투표 공개를 누르면 reveal 메시지가 브로드캐스트되어 모든 참가자의 화면에 투표 결과가 표시된다.</dd>
+          </dl>
+        </div>
+
+        <div class="term-entry" id="term-서버릴레이모드">
+          <h3 class="term-name">서버 릴레이 모드</h3>
+          <dl class="term-fields">
+            <dt>정의</dt>
+            <dd>WebRTC P2P DataChannel 연결에 실패했을 때 서버 SSE 채널을 통해 게임 메시지를 중계하는 전송 방식. P2P 연결 시도 후 8초 내에 채널이 열리지 않으면 자동으로 전환된다.</dd>
+            <dt>혼동 주의</dt>
+            <dd>시그널링과 구별된다. 시그널링은 P2P 채널을 여는 준비 단계이고, 서버 릴레이는 P2P 실패 후 게임 메시지를 직접 중계하는 단계이다.</dd>
+            <dt>예시</dt>
+            <dd>방화벽이 엄격한 기업 네트워크에서 P2P 연결이 불가한 경우, 8초 후 서버 릴레이 모드로 전환되어 게임을 계속 진행할 수 있다.</dd>
+          </dl>
+        </div>
+
+        <div class="term-entry" id="term-서버인메모리방상태">
+          <h3 class="term-name">서버 인메모리 방 상태</h3>
+          <dl class="term-fields">
+            <dt>정의</dt>
+            <dd>서버가 메모리에 보관하는 방별 참가자 목록. 각 참가자의 식별자, 표시 이름, 실시간 채널 쓰기 핸들을 포함한다. 서버 재시작 또는 마지막 참가자 퇴장 시 소멸한다.</dd>
+            <dt>혼동 주의</dt>
+            <dd>포커 게임 상태(투표값, 현재 티켓 등)와 구별된다. 서버 인메모리 방 상태는 연결 관리 전용이며, 게임 상태는 각 클라이언트가 보유한다.</dd>
+            <dt>예시</dt>
+            <dd>방에 참가자 A, B, C가 있을 때 서버는 세 명의 채널 쓰기 핸들을 메모리에 보관한다.</dd>
+          </dl>
+        </div>
+
+        <div class="term-entry" id="term-시그널링">
+          <h3 class="term-name">시그널링</h3>
+          <dl class="term-fields">
+            <dt>정의</dt>
+            <dd>WebRTC P2P 연결을 수립하기 위해 두 참가자가 SDP(세션 설명)와 ICE candidate(네트워크 경로 후보)를 교환하는 과정. 서버 SSE 채널이 중계 경로로 사용된다.</dd>
+            <dt>혼동 주의</dt>
+            <dd>서버 릴레이 모드와 구별된다. 시그널링은 P2P 채널을 여는 준비 단계이고, 서버 릴레이는 P2P 실패 후 게임 메시지를 직접 중계하는 단계이다.</dd>
+            <dt>예시</dt>
+            <dd>신규 참가자가 방에 진입하면 Offer → Answer → ICE candidate 순으로 시그널링이 진행되어 P2P 채널이 열린다.</dd>
+          </dl>
+        </div>
+
+        <div class="term-entry" id="term-연결중">
+          <h3 class="term-name">연결 중</h3>
+          <dl class="term-fields">
+            <dt>정의</dt>
+            <dd>클라이언트가 SSE 채널을 열고 WebRTC P2P 연결 또는 서버 릴레이 모드 연결을 수립하는 중인 초기 상태. P2P DataChannel이 열리거나 릴레이 모드로 전환되면 이 상태가 해제된다.</dd>
+            <dt>혼동 주의</dt>
+            <dd>SSE 채널 자체의 연결 여부와 구별된다. SSE 채널은 방 입장 즉시 열리지만, '연결 중' 상태는 게임 메시지 전달 경로(P2P 또는 릴레이)가 확정되기 전 구간을 가리킨다.</dd>
+            <dt>예시</dt>
+            <dd>방에 막 입장한 참가자는 SSE는 연결되어 있지만 아직 P2P 협상이 진행 중인 '연결 중' 상태이다.</dd>
+          </dl>
+        </div>
+
+        <div class="term-entry" id="term-자발적퇴장신호">
+          <h3 class="term-name">자발적 퇴장 신호</h3>
+          <dl class="term-fields">
+            <dt>정의</dt>
+            <dd>참가자가 의도적으로 방을 나갈 때 브라우저 종료 직전에 서버로 전송하는 퇴장 알림. 브라우저가 닫히더라도 전송이 보장되는 방식을 사용한다.</dd>
+            <dt>혼동 주의</dt>
+            <dd>SSE 연결 종료로 인한 퇴장 감지와 구별된다. 자발적 퇴장 신호와 SSE abort가 경합하더라도 서버는 중복 퇴장 알림 없이 한 번만 처리한다.</dd>
+            <dt>예시</dt>
+            <dd>참가자가 브라우저를 닫으면 자발적 퇴장 신호가 전송되어 다른 참가자에게 퇴장 알림이 전달된다.</dd>
+          </dl>
+        </div>
+
+        <div class="term-entry" id="term-전송경로">
+          <h3 class="term-name">전송 경로</h3>
+          <dl class="term-fields">
+            <dt>정의</dt>
+            <dd>게임 메시지가 참가자 간에 전달되는 방식. P2P(WebRTC DataChannel 직접 연결), 서버 릴레이(SSE 채널 중계), 연결 중(경로 미확정) 세 가지 상태를 가진다.</dd>
+            <dt>혼동 주의</dt>
+            <dd>SSE 채널(시그널링 전용)과 P2P DataChannel(게임 메시지 전용)을 구별해야 한다. SSE는 항상 서버를 경유하지만, P2P DataChannel은 두 참가자 간 직접 통신한다.</dd>
+            <dt>예시</dt>
+            <dd>P2P 연결 성공 시 전송 경로가 'P2P'로 전환되어 투표 메시지가 서버를 거치지 않고 직접 전달된다.</dd>
+          </dl>
+        </div>
+
+        <div class="term-entry" id="term-피어">
+          <h3 class="term-name">피어</h3>
+          <dl class="term-fields">
+            <dt>정의</dt>
+            <dd>방에 SSE 채널로 접속 중인 개별 참가자. 각 피어는 고유 식별자와 표시 이름을 가지며, 서버 메모리와 클라이언트 양쪽에서 추적된다.</dd>
+            <dt>혼동 주의</dt>
+            <dd>참가자(Participant)와 구별된다. 피어는 실시간 통신 연결 단위이고, 참가자는 포커 게임 도메인의 게임 참여 단위이다.</dd>
+            <dt>예시</dt>
+            <dd>방에 A, B, C 세 사람이 있으면 서버에는 피어 3개가 등록되어 각각 SSE 채널을 유지한다.</dd>
+          </dl>
+        </div>
+
+        <div class="term-entry" id="term-하트비트">
+          <h3 class="term-name">하트비트</h3>
+          <dl class="term-fields">
+            <dt>정의</dt>
+            <dd>SSE 연결이 살아있음을 확인하기 위해 서버가 15초마다 전송하는 빈 메시지 프레임. 실제 데이터는 포함하지 않으며 연결 유지 목적으로만 사용된다.</dd>
+            <dt>혼동 주의</dt>
+            <dd>게임 메시지와 구별된다. 하트비트는 연결 상태 확인 전용이며 게임 로직에 영향을 주지 않는다.</dd>
+            <dt>예시</dt>
+            <dd>방에 참가자가 있지만 게임 활동이 없을 때 서버는 15초마다 하트비트를 전송해 브라우저가 연결을 끊지 않도록 한다.</dd>
+          </dl>
+        </div>
+
+        <div class="term-entry" id="term-하트비트중단">
+          <h3 class="term-name">하트비트 중단</h3>
+          <dl class="term-fields">
+            <dt>정의</dt>
+            <dd>SSE 스트림이 닫힌 것을 감지하면 서버가 하트비트 인터벌을 정지하는 동작.</dd>
+            <dt>혼동 주의</dt>
+            <dd>피어 퇴장과 구별된다. 하트비트 중단은 내부 리소스 정리이며, 피어 퇴장 알림(peer_left)과는 별개로 처리된다.</dd>
+            <dt>예시</dt>
+            <dd>참가자의 브라우저가 비정상 종료되어 SSE 스트림이 닫히면 해당 연결의 하트비트 인터벌이 자동 중단된다.</dd>
+          </dl>
+        </div>
+
+        <div class="term-entry" id="term-ICEcandidate">
+          <h3 class="term-name">ICE candidate</h3>
+          <dl class="term-fields">
+            <dt>정의</dt>
+            <dd>WebRTC P2P 연결이 가능한 네트워크 경로 후보. STUN 서버를 통해 수집되며, 두 참가자가 서로의 candidate를 교환해 최적 경로를 선택한다.</dd>
+            <dt>혼동 주의</dt>
+            <dd>STUN 서버와 구별된다. STUN 서버는 candidate 수집을 도와주는 외부 서비스이고, ICE candidate는 수집 결과로 얻는 네트워크 주소 정보이다.</dd>
+            <dt>예시</dt>
+            <dd>참가자 A의 공인 IP:포트가 ICE candidate로 수집되어 참가자 B에게 전달되면 B는 해당 주소로 직접 연결을 시도한다.</dd>
+          </dl>
+        </div>
+
+        <div class="term-entry" id="term-OfferAnswer">
+          <h3 class="term-name">Offer / Answer</h3>
+          <dl class="term-fields">
+            <dt>정의</dt>
+            <dd>WebRTC P2P 연결 수립을 위해 교환하는 세션 설명(SDP) 쌍. Offer는 신규 진입 참가자가 먼저 생성하고, 기존 참가자가 Answer로 응답한다.</dd>
+            <dt>혼동 주의</dt>
+            <dd>게임 메시지와 구별된다. Offer/Answer는 P2P 채널을 여는 협상 단계에서만 사용되며, 채널이 열린 후에는 게임 메시지만 교환한다.</dd>
+            <dt>예시</dt>
+            <dd>참가자 C가 방에 입장하면 C(신규)가 A, B(기존) 각각에게 Offer를 보내고 A, B는 Answer로 응답해 총 2개의 P2P 채널이 열린다.</dd>
+          </dl>
+        </div>
+
+        <div class="term-entry" id="term-P2PDataChannel">
+          <h3 class="term-name">P2P DataChannel</h3>
+          <dl class="term-fields">
+            <dt>정의</dt>
+            <dd>WebRTC 연결 위에서 두 참가자 간에 게임 메시지를 직접 교환하는 양방향 채널. 서버를 거치지 않아 지연이 낮다. 채널 이름은 'game'으로 고정된다.</dd>
+            <dt>혼동 주의</dt>
+            <dd>SSE 채널과 구별된다. SSE 채널은 서버 경유 단방향 스트림(서버→클라이언트)이고, P2P DataChannel은 두 클라이언트 간 직접 양방향 채널이다.</dd>
+            <dt>예시</dt>
+            <dd>참가자 A와 B 사이에 P2P DataChannel이 열리면 A의 투표 메시지가 서버를 거치지 않고 B에게 직접 전달된다.</dd>
+          </dl>
+        </div>
+
+        <div class="term-entry" id="term-SSE">
+          <h3 class="term-name">SSE (Server-Sent Events)</h3>
+          <dl class="term-fields">
+            <dt>정의</dt>
+            <dd>서버에서 클라이언트로 이벤트를 단방향 스트리밍하는 기술. 이 도메인에서는 시그널링 메시지 중계와 서버 릴레이 모드 게임 메시지 전달에 사용된다.</dd>
+            <dt>혼동 주의</dt>
+            <dd>WebSocket과 구별된다. SSE는 서버→클라이언트 단방향이므로, 클라이언트→서버 메시지는 별도의 HTTP POST로 전송한다.</dd>
+            <dt>예시</dt>
+            <dd>참가자가 방에 입장하면 SSE 채널이 열려 서버에서 room_state, peer_joined, peer_left, relay 이벤트를 수신한다.</dd>
+          </dl>
+        </div>
+
+        <div class="term-entry" id="term-sync_request">
+          <h3 class="term-name">sync_request / sync_response</h3>
+          <dl class="term-fields">
+            <dt>정의</dt>
+            <dd>신규 진입 참가자가 현재 게임 상태를 수신하기 위해 사용하는 메시지 쌍. 신규 참가자가 sync_request를 호스트에게 보내면 호스트가 현재 게임 전체 상태를 담은 sync_response를 반환한다.</dd>
+            <dt>혼동 주의</dt>
+            <dd>일반 게임 메시지(voted/reveal 등)와 구별된다. sync_request/response는 입장 직후 초기 상태 동기화에만 사용된다.</dd>
+            <dt>예시</dt>
+            <dd>방에 늦게 입장한 참가자가 sync_request를 전송하면 호스트가 현재 투표 진행 상황과 티켓 목록이 담긴 sync_response를 반환한다.</dd>
+          </dl>
+        </div>
+      </article>
+    </main>
+  </div>
+  <script src="../../assets/search-index.js"></script>
+  <script src="../../assets/app.js"></script>
+</body>
+</html>
